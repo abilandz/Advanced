@@ -138,3 +138,11 @@ $tty # getting the pts of terminal you want to print
 
 
 
+o alternatives: TBI do I really need this
+
+=> Gnome: "Gnome Schedule" (from the package gnome-schedule)
+
+=> KDE: "KCron"
+
+=> Anacron, Fcron
+
