@@ -4,12 +4,9 @@
 
 
 
-### To do:
-
-1. Read Wikipedia entry
-2. Concrete real-life examples
 
 
+### Concrete real-life examples
 
 Since there was today a question on how to detach all processes from the terminal, I am now supplying my online reply with the brief tutorial on 'screen', which typically I am sending to the students under my supervision, and which won't be covered during this lecture in more detail.
 

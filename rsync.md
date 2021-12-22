@@ -1,15 +1,8 @@
 # rsync
 
-**Last update**: 20210226
+**Last update**: 20211222
 
 
-
-### To do:
-
-1. Read Wikipedia entry
-2. Read entries from the book
-3. Beautify the real-life examples
-4. Finalize the script below
 
 Very frequently we develop and use the same code on multiple computers - how to ensure best that the changes on one computer are automatically propagated onto another computers where our code sits? This can be accomplished with **git**, but for the simpler cases we can also use **rsync**. The latter can be learned within 5 minutes, while for **git** learning curve is much longer (but proportionally the gain is bigger). 
 

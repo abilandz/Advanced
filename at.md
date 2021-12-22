@@ -4,14 +4,6 @@
 
 
 
-### To do:
-
-1. Read Wikipedia entry
-2. Read entries from the book
-3. Beautify the real-life examples
-
-
-
 **at** : handles one-time tasks  
 
 
