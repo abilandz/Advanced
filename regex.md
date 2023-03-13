@@ -8,9 +8,22 @@
 
 ### Table of Contents
 1. [What is a regular expression?](#what.is.regex)
+	* [Shell's wildcard expansion or globbing](#globbing)
+	* [Basic Regular Expression (BRE)](#bre)
+	* [Extended Regular Expression (ERE)](#ere)
+	* [Perl-Compatible Regular Expressions (PCRE)](#pcre)
 2. [Metacharacters](#metacharacters)
 	* [Asterisk](#asterisk) ```*```
 	* [Dot](#dot)  ```.```
+	* [Anchors](#anchors) ```^``` and ```$```
+	* [Character classes](#character.classes) ```[ ... ]``` 
+	* [Question mark](#question.mark) ```?```
+	* [Plus](#plus) ```+```
+	* [Curly braces](#tbi) ```{ ... }``` 
+	* [Pipe symbol](#tbi) ```|```
+	* [Parentheses](#tbi) ```( ... )```
+	* [POSIX character classes](#tbi)
+	* [Non-standard](#tbi) ```\<``` and ```\>```
 3. [Real-life examples](#real.life.examples)
 4. [Further reading](#further.reading)
 
@@ -20,27 +33,62 @@
 
 
 
-
 ### 1. What is a regular expression? <a name="what.is.regex"></a>
-We have already seen that a value can be stored in a variable by explicit assignment (using the operator ```=```),  or if the user supplies variables as command line arguments (positional parameters) to a script or a function. In practice, however, one frequently wants to store the output of some command directly into the variable, or even the content of an external file. This can be achieved with the so-called _command substitution operator_ ```$( ... )```.  For instance, we have already seen that the file size in bytes can be printed with the following:
 
-```bash
-stat -c %s someFile
-```
-But how can we fetch the printout of above command programmatically, and do some manipulation with it later in our code? This is precis
+* definition, etc.
+
+There are four major categories of regular expressions available on the market.
+
+#### Shell's wildcard expansion or globbing <a name="globbing"></a>
+	*  the process of matching expressions containing wildcards to filenames
+ 	* works with filenames, but perhaps also in some other context
+		* ? => any single character
+   		* \*  => any string of characters
+   		* [set] (if you want - to be part of set, put it first or the last, otherwise it indicates range)
+   		* [!set] (! only at the very first place has a special meaning, you can either escape it, or place it at some other place)
+	  * ranges are not cross-platform independent
+	* ~ fits also here
+	* very handy with examples with pathname expansions
+	* expand only to the files or directories which exists => more general is brace expansion (see below)
+	* cannot be nested
+
+TBI: enlist programs which support it
 
 
+#### Basic Regular Expression (BRE) <a name="bre"></a>
+
+* standardized by POSIX
+* programs which support it: **ed**, **sed**, and **grep**
+
+
+#### Extended Regular Expression (ERE) <a name="ere"></a>
+
+* standardized by POSIX
+* programs which support it: egrep (or grep -E), awk, operator =~ in recent versions of **Bash**
+* defined by POSIX, a few additional characters. Not all applications support them (e.g. 'sed')
+
+
+
+#### Perl-Compatible Regular Expressions (PCRE) <a name="pcre"></a>
+
+
+* standalone library => the most popular implementation of regex these days
+	* [https://www.pcre.org/](https://www.pcre.org/)
+
+* programs which support it: **perl**, **grep -P** 
 
 
 
 
 ### 2. Metacharacters <a name="metacharacters"></a>
-We have already seen that a value can be stored in a variable by explicit assignment (using the operator ```=```),  or if the user supplies variables as command line arguments (positional parameters) to a script or a function. In practice, however, one frequently wants to store the output of some command directly into the variable, or even the content of an external file. This can be achieved with the so-called _command substitution operator_ ```$( ... )```.  For instance, we have already seen that the file size in bytes can be printed with the following:
 
-```bash
-stat -c %s someFile
-```
-But how can we fetch the printout of above command programmatically, and do some manipulation with it later in our code? This is precis
+Metacharacter is a symbol, or combination of symbols, with special and non-literal meaning in regular expressions. Despite its peculiar name, metacharacters are present all around us. For instance, in math we are used to using metacharacters, for instance in the arithmetic expression ```4 * 10``` TBI 
+
+Then, combination of symbols ```\n``` is a common metacharacter for new line.
+
+
+* TBI for each character, give its meaning as a glob and as regex
+
 
 
 #### Asterisk ```*``` <a name="asterisk"></a>
@@ -69,9 +117,8 @@ But how can we fetch the printout of above command programmatically, and do some
 
 
 ### 4. Further reading <a name="further.reading"></a>
-We have already seen that a value can be stored in a variable by explicit assignment (using the operator ```=```),  or if the user supplies variables as command line arguments (positional parameters) to a script or a function. In practice, however, one frequently wants to store the output of some command directly into the variable, or even the content of an external file. This can be achieved with the so-called _command substitution operator_ ```$( ... )```.  For instance, we have already seen that the file size in bytes can be printed with the following:
 
-```bash
-stat -c %s someFile
-```
-But how can we fetch the printout of above command programmatically, and do some manipulation with it later in our code? This is precis
+* _"Linux Command Line and Shell Scripting Bible"_, Richard Blum, Christine Bresnahan 
+	 * Chapter 20: Regular Expressions
+* _"sed & awk"_, Dale Dougherty, Arnold Robbins 
+	* Chapter 3: Understanding Regular Expression Syntax
