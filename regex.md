@@ -3,11 +3,12 @@
 
 # Regular expressions
 
-**Last update**: 20230313
+**Last update**: 20230314
 
 
 ### Table of Contents
 1. [What is a regular expression?](#what.is.regex)
+	
 	* [Shell's wildcard expansion or globbing](#globbing)
 	* [Basic Regular Expression (BRE)](#bre)
 	* [Extended Regular Expression (ERE)](#ere)
@@ -19,11 +20,11 @@
 	* [Character classes](#character.classes) ```[ ... ]``` 
 	* [Question mark](#question.mark) ```?```
 	* [Plus](#plus) ```+```
-	* [Curly braces](#tbi) ```{ ... }``` 
-	* [Pipe symbol](#tbi) ```|```
-	* [Parentheses](#tbi) ```( ... )```
-	* [POSIX character classes](#tbi)
-	* [Non-standard](#tbi) ```\<``` and ```\>```
+	* [Repetition operator](#repetition) ```\{ ... \}``` and  ```{ ... }```
+	* [Alternation operator](#alternation) ```|```
+	* [Grouping operator](#grouping) ```( ... )```
+	* [POSIX character classes](#POSIX.character.classes) ```[:keyword:]```
+	* [Non-standard](#nonstandard) ```\<``` and ```\>```
 3. [Real-life examples](#real.life.examples)
 4. [Further reading](#further.reading)
 
@@ -43,9 +44,9 @@ There are four major categories of regular expressions available on the market.
 	*  the process of matching expressions containing wildcards to filenames
  	* works with filenames, but perhaps also in some other context
 		* ? => any single character
-   		* \*  => any string of characters
-   		* [set] (if you want - to be part of set, put it first or the last, otherwise it indicates range)
-   		* [!set] (! only at the very first place has a special meaning, you can either escape it, or place it at some other place)
+      		* \*  => any string of characters
+         		* [set] (if you want - to be part of set, put it first or the last, otherwise it indicates range)
+            		* [!set] (! only at the very first place has a special meaning, you can either escape it, or place it at some other place)
 	  * ranges are not cross-platform independent
 	* ~ fits also here
 	* very handy with examples with pathname expansions
@@ -53,6 +54,44 @@ There are four major categories of regular expressions available on the market.
 	* cannot be nested
 
 TBI: enlist programs which support it
+
+
+
+Frequent point of failure when writing a shell script is to forget that **Bash** will always by default attempt to perform wildcard expansion, i.e. it will attempt to match any glob (pattern with metacharacters AB) against files in the current directory, and replace it by a list of filenames. For instance, consider the line:
+
+```bash
+echo Is this my file? # WRONG!!
+```
+
+The last argument is a glob, and **Bash** will match it against all files in the current directory which starts with "file" and have exactly one more character. If it happens that in the current directory there are files with names _file0_ and _file1_, what echo receives eventully as arguments is:
+
+```bash
+echo Is this my file0 file1
+```
+
+To prevent such unwanted surprises, simply use quote:
+
+```bash
+echo "Is this my file?"
+```
+
+Within quotes, ```?``` is not a metacharacter, i.e. it's literally a good old question mark. While this example was not dangerous, this one can lead to disaster:
+
+```bash
+unset myArray[1] # WRONG!!
+```
+
+Here, argument is treated as a glob, because it has metacharacters ```[]``` , and it will be matched against a file named _myArray1_ in the current working directory, if it exists. Therefore, the correct version here is also 
+
+```bash
+unset "myArray[1]"
+```
+
+Within quotes, ```[]``` is not treated as a glob.
+
+
+
+
 
 
 #### Basic Regular Expression (BRE) <a name="bre"></a>
@@ -66,8 +105,6 @@ TBI: enlist programs which support it
 * standardized by POSIX
 * programs which support it: egrep (or grep -E), awk, operator =~ in recent versions of **Bash**
 * defined by POSIX, a few additional characters. Not all applications support them (e.g. 'sed')
-
-
 
 #### Perl-Compatible Regular Expressions (PCRE) <a name="pcre"></a>
 
@@ -96,6 +133,38 @@ We have already seen that a value can be stored in a variable by explicit assign
 
 
 #### Dot ```.``` <a name="dot"></a>
+We have already seen that a value can be stored in a variable by explicit assignment (using the operator 
+
+
+#### Character classes ```[ ... ]``` <a name="character.classes"></a>
+We have already seen that a value can be stored in a variable by explicit assignment (using the operator 
+
+
+#### Question mark ```?``` <a name="question.mark"></a>
+We have already seen that a value can be stored in a variable by explicit assignment (using the operator 
+
+
+#### Plus ```+``` <a name="plus"></a>
+We have already seen that a value can be stored in a variable by explicit assignment (using the operator 
+
+
+#### Repetition operator ```\{ ... \}``` and  ```{ ... }``` <a name="repetition"></a>
+We have already seen that a value can be stored in a variable by explicit assignment (using the operator 
+
+
+#### Alternation operator ```|``` <a name="alternation"></a>
+We have already seen that a value can be stored in a variable by explicit assignment (using the operator 
+
+
+#### Grouping operator ```( ... )``` <a name="grouping"></a>
+We have already seen that a value can be stored in a variable by explicit assignment (using the operator 
+
+
+#### POSIX character classes ```[:keyword:]``` <a name="#POSIX.character.classes"></a>
+We have already seen that a value can be stored in a variable by explicit assignment (using the operator 
+
+
+#### Non-standard ```\<``` and ```\>``` <a name="#nonstandard"></a>
 We have already seen that a value can be stored in a variable by explicit assignment (using the operator 
 
 
