@@ -3,7 +3,7 @@
 
 # Regular expressions
 
-**Last update**: 20230314
+**Last update**: 20230328
 
 
 ### Table of Contents
@@ -35,59 +35,39 @@
 
 
 ### 1. What is a regular expression? <a name="what.is.regex"></a>
+A regular expression, or _regex_ for short, is a pattern template used to filter text in order to extract the specific information. Or looking from another angle, a regular expression is a pattern that describes a set of strings. Writing a regular expression is equivalent to creating a text filter. Patterns used to define regular expression contain symbols with special, non-literal meaning. In general, such special individual symbols or specific combinations of individual symbols are named _metacharacters_. When interpreted directly by shell to perform filename expansion (or _globbing_), metacharacters are also called _wildcards_. To add to the confusion, some metacharacters have different meaning when used in regular expression or in globbing. Next, we attempt to systematize (TBI finalize this sentence).
 
-* definition, etc.
-
-There are four major categories of regular expressions available on the market.
+There are four major categories of regular expressions available.
 
 #### Shell's wildcard expansion or globbing <a name="globbing"></a>
-	*  the process of matching expressions containing wildcards to filenames
- 	* works with filenames, but perhaps also in some other context
-		* ? => any single character
-      		* \*  => any string of characters
-         		* [set] (if you want - to be part of set, put it first or the last, otherwise it indicates range)
-            		* [!set] (! only at the very first place has a special meaning, you can either escape it, or place it at some other place)
-	  * ranges are not cross-platform independent
-	* ~ fits also here
-	* very handy with examples with pathname expansions
-	* expand only to the files or directories which exists => more general is brace expansion (see below)
-	* cannot be nested
+Each shell supports the process of matching expressions containing wildcards to filenames. As the basic example, in the following command input
+```bash
+ls -al *.txt
+```
+shell will list all files whose names end with  _.txt_ in the current directory. In the above expression, ```*``` is a _wildcard_ and ```*.txt``` is a _glob_. Basically, glob is a pattern containing one or more wildcards. Its name originates from the early Unix command named **glob** (shortcut for 'global'), which was used by shell to expand wildcard characters in the list of file paths, and supply back that list of files to the command. Just like any other frequently used features, glob mechanism was eventually implemented directly into the shell (TBI: check this last statement).
+
+The most frequent wildcards are: ```?``` ```*``` ```[]``` (TBI: finalize the list)	
+
+
+
+
+
+
+
+  * works with filenames, but perhaps also in some other context
+    * ? => any single character
+      * \*  => any string of characters
+        * [set] (if you want - to be part of set, put it first or the last, otherwise it indicates range)
+          * [!set] (! only at the very first place has a special meaning, you can either escape it, or place it at some other place)
+      * ranges are not cross-platform independent
+    * ~ fits also here
+    * very handy with examples with pathname expansions
+    * expand only to the files or directories which exists => more general is brace expansion (see below)
+    * cannot be nested
 
 TBI: enlist programs which support it
 
 
-
-Frequent point of failure when writing a shell script is to forget that **Bash** will always by default attempt to perform wildcard expansion, i.e. it will attempt to match any glob (pattern with metacharacters AB) against files in the current directory, and replace it by a list of filenames. For instance, consider the line:
-
-```bash
-echo Is this my file? # WRONG!!
-```
-
-The last argument is a glob, and **Bash** will match it against all files in the current directory which starts with "file" and have exactly one more character. If it happens that in the current directory there are files with names _file0_ and _file1_, what echo receives eventully as arguments is:
-
-```bash
-echo Is this my file0 file1
-```
-
-To prevent such unwanted surprises, simply use quote:
-
-```bash
-echo "Is this my file?"
-```
-
-Within quotes, ```?``` is not a metacharacter, i.e. it's literally a good old question mark. While this example was not dangerous, this one can lead to disaster:
-
-```bash
-unset myArray[1] # WRONG!!
-```
-
-Here, argument is treated as a glob, because it has metacharacters ```[]``` , and it will be matched against a file named _myArray1_ in the current working directory, if it exists. Therefore, the correct version here is also 
-
-```bash
-unset "myArray[1]"
-```
-
-Within quotes, ```[]``` is not treated as a glob.
 
 
 
@@ -172,15 +152,42 @@ We have already seen that a value can be stored in a variable by explicit assign
 
 
 
+
+
+
+
 ### 3. Real-life examples <a name="real.life.examples"></a>
-We have already seen that a value can be stored in a variable by explicit assignment (using the operator ```=```),  or if the user supplies variables as command line arguments (positional parameters) to a script or a function. In practice, however, one frequently wants to store the output of some command directly into the variable, or even the content of an external file. This can be achieved with the so-called _command substitution operator_ ```$( ... )```.  For instance, we have already seen that the file size in bytes can be printed with the following:
+Frequent point of failure when writing a shell script is to forget that **Bash** will always by default attempt to perform wildcard expansion, i.e. it will attempt to match any glob against files in the current directory, and replace it by a list of filenames. For instance, consider the line:
 
 ```bash
-stat -c %s someFile
+echo Is this my file? # WRONG!!
 ```
-But how can we fetch the printout of above command programmatically, and do some manipulation with it later in our code? This is precis
 
+The last argument is a glob, and **Bash** will match it against all files in the current directory which starts with "file" and have exactly one more character. If it happens that in the current directory there are files with names _file0_ and _file1_, what echo receives eventully as arguments is:
 
+```bash
+echo Is this my file0 file1
+```
+
+To prevent such unwanted surprises, simply use quote:
+
+```bash
+echo "Is this my file?"
+```
+
+Within quotes, ```?``` is not a metacharacter, i.e. it's literally a good old question mark. While this example was not dangerous, this one can lead to disaster:
+
+```bash
+unset myArray[1] # WRONG!!
+```
+
+Here, argument is treated as a glob, because it has metacharacters ```[]``` , and it will be matched against a file named _myArray1_ in the current working directory, if it exists. Therefore, the correct version here is also 
+
+```bash
+unset "myArray[1]"
+```
+
+Within quotes, ```[]``` is not treated as a glob.
 
 
 
