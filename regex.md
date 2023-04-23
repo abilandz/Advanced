@@ -3,7 +3,7 @@
 
 # Regular expressions
 
-**Last update**: 20230328
+**Last update**: 20230423
 
 
 ### Table of Contents
@@ -35,19 +35,17 @@
 
 
 ### 1. What is a regular expression? <a name="what.is.regex"></a>
-A regular expression, or _regex_ for short, is a pattern template used to filter text in order to extract the specific information. Or looking from another angle, a regular expression is a pattern that describes a set of strings. Writing a regular expression is equivalent to creating a text filter. Patterns used to define regular expression contain symbols with special, non-literal meaning. In general, such special individual symbols or specific combinations of individual symbols are named _metacharacters_. When interpreted directly by shell to perform filename expansion (or _globbing_), metacharacters are also called _wildcards_. To add to the confusion, some metacharacters have different meaning when used in regular expression or in globbing. Next, we attempt to systematize (TBI finalize this sentence).
+A regular expression, or _regex_ for short, is a pattern template used to filter text in order to extract the specific information. Or looking from another angle, a regular expression is a pattern that describes a set of strings. Writing a regular expression is equivalent to creating a text filter. Patterns used to define regular expression contain symbols with special, non-literal meaning. In general, such special individual symbols or specific combinations of individual symbols are named _metacharacters_. When interpreted directly by shell to perform filename expansion (or _globbing_), metacharacters are called _wildcards_. To add to the confusion, some metacharacters have different meaning when used in regular expression or in file expansion. There are four major categories of regular expressions available, and in what follows next, we attempt to systematize.
 
-There are four major categories of regular expressions available.
 
 #### Shell's wildcard expansion or globbing <a name="globbing"></a>
 Each shell supports the process of matching expressions containing wildcards to filenames. As the basic example, in the following command input
 ```bash
 ls -al *.txt
 ```
-shell will list all files whose names end with  _.txt_ in the current directory. In the above expression, ```*``` is a _wildcard_ and ```*.txt``` is a _glob_. Basically, glob is a pattern containing one or more wildcards. Its name originates from the early Unix command named **glob** (shortcut for 'global'), which was used by shell to expand wildcard characters in the list of file paths, and supply back that list of files to the command. Just like any other frequently used features, glob mechanism was eventually implemented directly into the shell (TBI: check this last statement).
+shell will list all files whose names end with  _.txt_ in the current directory. In the above expression, ```*``` is a _wildcard_ and ```*.txt``` is a _glob_. Basically, glob is a pattern containing one or more wildcards. Its name originates from the early-days Unix command named **glob** (shortcut for 'global'), which was used by shell to expand wildcard characters in the list of file paths, and supply back that list of files to the command. Just like any other frequently used feature, glob mechanism was eventually implemented directly into the shell.
 
-The most frequent wildcards are: ```?``` ```*``` ```[]``` (TBI: finalize the list)	
-
+The most frequent wildcards are: ```?``` ```*``` ```[]``` . When these special symbols are used in regular expressions, their interpretation can be different. Therefore, in the next section we enlist systematically all special characters, and explain their use cases separately in regular expressions and in filename expansion, whenever it differs.
 
 
 
@@ -65,8 +63,6 @@ The most frequent wildcards are: ```?``` ```*``` ```[]``` (TBI: finalize the lis
     * expand only to the files or directories which exists => more general is brace expansion (see below)
     * cannot be nested
 
-TBI: enlist programs which support it
-
 
 
 
@@ -82,29 +78,22 @@ TBI: enlist programs which support it
 
 #### Extended Regular Expression (ERE) <a name="ere"></a>
 
-* standardized by POSIX
-* programs which support it: egrep (or grep -E), awk, operator =~ in recent versions of **Bash**
-* defined by POSIX, a few additional characters. Not all applications support them (e.g. 'sed')
+* standardized by POSIX, a few additional metacharacters when compared to BRE
+* programs which support it: egrep (or grep -E), awk, sed -E, operator =~ in recent versions of **Bash**
 
 #### Perl-Compatible Regular Expressions (PCRE) <a name="pcre"></a>
 
-
-* standalone library => the most popular implementation of regex these days
-	* [https://www.pcre.org/](https://www.pcre.org/)
-
-* programs which support it: **perl**, **grep -P** 
+* standalone library written in C (  [https://www.pcre.org/](https://www.pcre.org/) ), the most powerful implementation of regex, aimed initially to provide all regex features available in **perl** programming language 
+* use cases are rather limited for regular daily tasks, therefore not covered here in detail
+* PCRE syntax for regular expressions are supported in: **perl** (obviously), **grep -P**
 
 
+In what follows next, we enlist all metacharacters which appear in globbing, BRE and ERE.
 
 
 ### 2. Metacharacters <a name="metacharacters"></a>
 
-Metacharacter is a symbol, or combination of symbols, with special and non-literal meaning in regular expressions. Despite its peculiar name, metacharacters are present all around us. For instance, in math we are used to using metacharacters, for instance in the arithmetic expression ```4 * 10``` TBI 
-
-Then, combination of symbols ```\n``` is a common metacharacter for new line.
-
-
-* TBI for each character, give its meaning as a glob and as regex
+Metacharacter is a symbol, or combination of symbols, with special and non-literal meaning in regular expressions and filename expansions. Despite its peculiar name, metacharacters are present all around us. For instance, in math we are used to using metacharacters, for instance in the arithmetic expression ```4 * 10``` we understand that metacharacter ```*``` represents multiplication. As another example, combination of symbols ```\n``` is a composite metacharacter, and is common metacharacter for new line.
 
 
 
