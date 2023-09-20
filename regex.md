@@ -3,12 +3,11 @@
 
 # Regular expressions
 
-**Last update**: 20230423
+**Last update**: 20230920
 
 
 ### Table of Contents
 1. [What is a regular expression?](#what.is.regex)
-	
 	* [Shell's wildcard expansion or globbing](#globbing)
 	* [Basic Regular Expression (BRE)](#bre)
 	* [Extended Regular Expression (ERE)](#ere)
@@ -24,9 +23,10 @@
 	* [Alternation operator](#alternation) ```|```
 	* [Grouping operator](#grouping) ```( ... )```
 	* [POSIX character classes](#POSIX.character.classes) ```[:keyword:]```
-	* [Non-standard](#nonstandard) ```\<``` and ```\>```
+	* [Non-standard](#nonstandard) ```\<``` and ```\>``` 
 3. [Real-life examples](#real.life.examples)
 4. [Further reading](#further.reading)
+5. 
 
 	
 
@@ -35,7 +35,7 @@
 
 
 ### 1. What is a regular expression? <a name="what.is.regex"></a>
-A regular expression, or _regex_ for short, is a pattern template used to filter text in order to extract the specific information. Or looking from another angle, a regular expression is a pattern that describes a set of strings. Writing a regular expression is equivalent to creating a text filter. Patterns used to define regular expression contain symbols with special, non-literal meaning. In general, such special individual symbols or specific combinations of individual symbols are named _metacharacters_. When interpreted directly by shell to perform filename expansion (or _globbing_), metacharacters are called _wildcards_. To add to the confusion, some metacharacters have different meaning when used in regular expression or in file expansion. There are four major categories of regular expressions available, and in what follows next, we attempt to systematize.
+A regular expression, or _regex_ for short, is a pattern template used to filter text in order to extract the specific information. Or looking from another angle, a regular expression is a pattern that describes a set of strings. Writing a regular expression is equivalent to creating a text filter. Patterns used to define regular expression contain symbols with special, non-literal meaning. In general, such special individual symbols or specific combinations of individual symbols are named _metacharacters_. When interpreted directly by shell to perform filename expansion (or _globbing_), metacharacters are called _wildcards_. To add to the confusion, some metacharacters have different meaning when used in regular expression or in file expansion. Historically, the first implementation and use of reqular expression can be traced back to the late 1960s and Ken Thompson's re-implementation of line-oriented editor QED for Multics (unsuccessful OS which predated Unix). There are four major categories of regular expressions available, and in what follows next, we attempt to systematize.
 
 
 #### Shell's wildcard expansion or globbing <a name="globbing"></a>
@@ -79,7 +79,7 @@ The most frequent wildcards are: ```?``` ```*``` ```[]``` . When these special s
 #### Extended Regular Expression (ERE) <a name="ere"></a>
 
 * standardized by POSIX, a few additional metacharacters when compared to BRE
-* programs which support it: egrep (or grep -E), awk, sed -E, operator =~ in recent versions of **Bash**
+* programs which support it: **egrep** (or **grep -E**), **awk**, **sed -E**, operator =~ in recent versions of **Bash**
 
 #### Perl-Compatible Regular Expressions (PCRE) <a name="pcre"></a>
 
@@ -88,7 +88,7 @@ The most frequent wildcards are: ```?``` ```*``` ```[]``` . When these special s
 * PCRE syntax for regular expressions are supported in: **perl** (obviously), **grep -P**
 
 
-In what follows next, we enlist all metacharacters which appear in globbing, BRE and ERE.
+In what follows next, we enlist and briefly discuss all metacharacters which appear in globbing, BRE and ERE.
 
 
 ### 2. Metacharacters <a name="metacharacters"></a>
@@ -98,11 +98,31 @@ Metacharacter is a symbol, or combination of symbols, with special and non-liter
 
 
 #### Asterisk ```*``` <a name="asterisk"></a>
-We have already seen that a value can be stored in a variable by explicit assignment (using the operator 
+1. In BRE will match any number of repetitions of the preceeding character or, in a more elaborate case, it will match zero or more occurrences of the preceding regular expression. By itself, asterisk “*” matches nothing, it modifies what goes before it 
+
+2. As a shell wildcard, meaning of * is completely different, there it means "zero or more characters"  
+
+Example: Regular expression for "any number of characters (including 0 characters!!)" is .*
+
+Example: Regex A.*E matches ACE, AIRPLANE, A LONG WAY HOME, etc., but also it matches AE
+
+
+- When it’s applied on a single character, that character may be there or not, and if it is, there may be more than one of them
+    - `[ab]c*` — matches “ab”, “abc”, “abcc” **(TBI this is my example, test it)**
+    - `[ab]cc*` — matches “abc”, “abcc”, “abccc”, but not “ab” **(TBI this is my example, test it)**
+- Classical examples:
+    - `*` — matches one or more spaces
+    - `.*` — matches any number of characters
+    - `".*"` — matches any string within quotes. The span matched by it is always longest possible
+    - `grep '<.*>' someHtml` — matches any formatting instruction in html
+    - `[no]*` — in combination with character classes, it matches any number of characters in that class, but also in any ordeer. So this would match no, nno, noo, , on, oon, onn, etc.  **(TBI test it)**
+- Closure ⇒ the ability to match “zero or more” of something
 
 
 #### Dot ```.``` <a name="dot"></a>
-We have already seen that a value can be stored in a variable by explicit assignment (using the operator 
+In BRE the dot ```.``` will match any single character, except newline. It can be thought of as a sort of "variable" in regex, in analogy with the case where variable represents any value in arithmetic expression. (TBI it seems that in awk dot matches also embedded new line => check)
+
+Example #1: Demonstrate that regex "Chapter." matches Chapter anywhere, except at the end of the line, because `.` doesn’t match end of line (TBI finalize this example)
 
 
 #### Character classes ```[ ... ]``` <a name="character.classes"></a>
@@ -179,6 +199,9 @@ unset "myArray[1]"
 Within quotes, ```[]``` is not treated as a glob.
 
 
+**Common idioms:**
+* (.*) will match any sequence of characters enclosed in parenthesses
+
 
 
 ### 4. Further reading <a name="further.reading"></a>
@@ -187,3 +210,5 @@ Within quotes, ```[]``` is not treated as a glob.
 	 * Chapter 20: Regular Expressions
 * _"sed & awk"_, Dale Dougherty, Arnold Robbins 
 	* Chapter 3: Understanding Regular Expression Syntax
+* _"UNIX A history and a Memoir"_, Brian Kernighan
+	* Section 4.6: Regular expressions 
