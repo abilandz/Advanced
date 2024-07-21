@@ -3,7 +3,7 @@
 
 # Regular expressions
 
-**Last update**: 20240327
+**Last update**: 20240721
 
 
 ### Table of Contents
@@ -13,10 +13,11 @@
 	* [Basic Regular Expression (BRE)](#bre)
 	* [Extended Regular Expression (ERE)](#ere)
 	* [Perl-Compatible Regular Expressions (PCRE)](#pcre)
+	
 2. [Metacharacters](#metacharacters)
 	
 	* [Asterisk](#asterisk) ```*```
-	* [Backslash](#backslash)  ```Can you please provide me with access to this document?
+	* [Backslash](#backslash)  ```
 	* [Dot](#dot)  ```.```
 	* [Anchors](#anchors) ```^``` and ```$```
 	* [Character classes](#character.classes) ```[ ... ]``` 
@@ -27,18 +28,17 @@
 	* [Grouping operator](#grouping) ```( ... )```
 	* [POSIX character classes](#POSIX.character.classes) ```[:keyword:]```
 	* [Non-standard](#nonstandard) ```\<``` and ```\>``` 
-3. [Real-life examples](#real.life.examples)
-4. [Further reading](#further.reading)
-5. 
-
 	
+3. [Real-life examples](#real.life.examples)
 
+4. [Further reading](#further.reading)
 
+   
 
 
 
 ### 1. What is a regular expression? <a name="what.is.regex"></a>
-A regular expression, or _regex_ for short, is a pattern template used to filter text in order to extract specific information. Or, looking from another angle, a regular expression is a pattern that describes a set of strings. Writing a regular expression is equivalent to creating a text filter. Patterns used to define regular expression contain symbols with special, non-literal meaning. In general, such special individual symbols or specific combinations of individual symbols are named _metacharacters_. When interpreted directly by shell to perform filename expansion (or _globbing_), metacharacters are called _wildcards_. To add to the confusion, some metacharacters have different meanings when used in regular expression or filename expansion. 
+A regular expression, or _regex_ for short, is a pattern template used to filter text in order to extract specific information. Or, looking from another angle, a regular expression is a pattern that describes a set of strings. Writing a regular expression is equivalent to creating a text filter. Patterns used to define regular expression contain symbols with special, non-literal meaning. In general, such special individual symbols or specific combinations of individual symbols, are named _metacharacters_. When interpreted directly by a shell to perform filename expansion (or _globbing_), metacharacters are called _wildcards_. To add to the confusion, some metacharacters have different meanings when used in regular expression or filename expansion. 
 
 Historically, the first implementation and use of regular expression can be traced back to the late 1960s and Ken Thompson's re-implementation of line-oriented editor QED for Multics (an unsuccessful operating system that predated Unix). There are four major categories of regular expressions, and in what follows next, we attempt to systematize.
 
@@ -48,13 +48,11 @@ Each shell supports the process of matching expressions containing wildcards to 
 ```bash
 ls -al *.txt
 ```
-shell will list all files whose names end with _.txt_ in the current directory. In the above expression, ```*``` is a _wildcard_ and ```*.txt``` is a _glob_. Basically, _glob_ is a pattern containing one or more wildcards. Its name originates from the early-days Unix command named **glob** (shortcut for 'global'), which was used by shell to expand wildcard characters in the list of file paths, and supply back that list of files to the command. Just like any other frequently used feature, this mechanism was eventually implemented directly into the shell.
+shell will list all files whose names end with _.txt_ in the current working directory. In the above expression, ```*``` is a _wildcard_ and ```*.txt``` is a _glob_. Basically, _glob_ is a pattern containing one or more wildcards. Its name originates from the early-days Unix command named **glob** (shortcut for 'global'), which was used by the shell to expand wildcard characters in the list of file paths, and supply back that list of files to the command. Just like any other frequently used feature, this mechanism was eventually implemented directly into the shell.
 
-The most frequent shell's wildcards used in filename expansions are: ```?``` ```*``` ```[]``` ```[!]``` ```{}``` ```\``` 
+The standard and most frequent shell's wildcards used in filename expansions are: ```?``` ```*``` ```[]``` ```[!]``` ```{}``` ```\``` 
 
-It is important to remember that when these special shell symbols are used in regular expressions, their interpretation can be different. In addition, when specifying regex as a pattern in commands like **grep**, **find**, etc., embed it always within strong quotes, schematically as ```'some-regex-with-special-symbols'```, so that these special symbols are not interpreted and expanded first by shell as its wildcards, before supplying that regex to the command.
-
-In the next section, we systematically enlist all special characters and explain their use cases separately in regular expressions and in filename expansion whenever the use case differs.
+It is important to remember that when these special shell symbols are used in regular expressions, their interpretation can be different. In addition, when specifying regex as a pattern in commands like **grep**, **find**, etc., that regex always needs to be embedded within strong quotes, schematically as ```'some-regex-with-special-symbols'```, so that these special symbols are not interpreted and expanded first by the shell as its wildcards, before supplying that regex to the command.
 
 
 #### Basic Regular Expression (BRE) <a name="bre"></a>
@@ -69,15 +67,16 @@ In the next section, we systematically enlist all special characters and explain
 * standardized by POSIX
 * all metacharacters supported by BRE, only with a slightly different notation for compound repetition operator ```{n,m}```
 * additional metacharacters when compared to BRE: ```+``` ```?``` ```|``` ```()``` 
+* first implemented by Alfred Aho in 1979 in the extended version of __grep__ called __egrep__ 
 * programs that support ERE: **egrep** (or **grep -E**), **awk**, **sed -E**, operator **=~** in recent versions of **Bash**
 
 #### Perl-Compatible Regular Expressions (PCRE) <a name="pcre"></a>
 
-* standalone library written in C (  [https://www.pcre.org/](https://www.pcre.org/) ), the most powerful implementation of regex, aimed initially to provide all regex features available in the **perl** programming language 
+* standalone library written in C ( [https://www.pcre.org/](https://www.pcre.org/) ), the most powerful implementation of regex, aimed initially to provide all regex features available in the **perl** programming language
 * use cases are rather limited in custom daily tasks, therefore not covered here in detail
 * PCRE syntax for regular expressions is supported in: **perl** (obviously), **grep -P**
 
-In what follows, we enlist and briefly discuss all metacharacters appearing as shell wildcards (i.e. in globbing), in BRE, or in ERE.
+In the next section, we systematically enlist all metacharacters and explain their use cases when they appear as shell wildcards (i.e. in globbing), in BRE, or in ERE.
 
 
 
@@ -86,18 +85,18 @@ In what follows, we enlist and briefly discuss all metacharacters appearing as s
 
 ### 2. Metacharacters <a name="metacharacters"></a>
 
-Metacharacter is a symbol, or combination of symbols, with special and non-literal meaning in regular expressions and filename expansions. Despite its peculiar name, metacharacters are present all around us. In math, we are used to using metacharacters; for instance, in the arithmetic expression 4 * 10, we understand that metacharacter ```*``` represents multiplication. As another example, a combination of symbols \n is a composite metacharacter and is a common metacharacter for a new line.
+Metacharacter is a symbol, or combination of symbols, with special and non-literal meaning in regular expressions and filename expansions. Despite its peculiar name, metacharacters are present all around us. In math, we are used to using metacharacters; for instance, in the arithmetic expression ```4 * 10```, we understand that metacharacter ```*``` represents multiplication. As another example, a combination of symbols ```\n``` is a composite metacharacter and is a common metacharacter for a new line.
 
 
 
 #### Asterisk ```*``` <a name="asterisk"></a>
-1. In BRE, it will match any number (including zero) of repetitions of the preceding character or, in a more elaborate case, it will match zero or more occurrences of the preceding regular expression. By itself, the asterisk "*" matches nothing, it modifies what goes before it;
+1. In BRE, it will match any number (including zero) of repetitions of the preceding character or, in a more elaborate case, it will match zero or more occurrences of the preceding regular expression. By itself, the asterisk ```*``` matches nothing, it modifies what goes before it;
 
-2. As a shell wildcard, the meaning of the asterisk "*" is completely different &mdash; in this context, it stands for "zero or more characters."
+2. As a shell wildcard, the meaning of the asterisk ```*``` is completely different &mdash; in this context, it stands for "zero or more characters."
 
-Example: Regular expression for "any number of characters (including 0 characters!)" is .*
+__Example 1__: Regex for "any number of characters (including 0 characters!)" is ```.*```
 
-Example: Regex A.*E matches ACE, AIRPLANE, A LONG WAY HOME, etc., but also it matches AE
+__Example 2__: Regex ```A.*E``` matches ACE, AIRPLANE, A LONG WAY HOME, etc., but also it matches AE
 
 
 - When it’s applied on a single character, that character may be there or not, and if it is, there may be more than one of them
@@ -126,6 +125,10 @@ Finally, it can be used to elegantly diminish a difference between US and UK Eng
 sed -n '/colou*r/p' # TBI prints lines holding both "color" and "colour"
 ````
 
+To do for this section:
+
+20240721 It's still a mess
+
 
 
 #### Backslash ```\``` <a name="backslash"></a>
@@ -145,25 +148,29 @@ $Var
 
 TBI do I comment on its meaning in globbing?
 
-TBI AB: If you needed a literal search for metacharacter containing already `\\` , you have to escape it, like in `\\\\n` **TBI test this**
+TBI AB: If you need a literal search for metacharacter containing already `\\` , you have to escape it, like in `\\\\n` **TBI test this**
 
 only sed: These are metacharacters: `\\(` `\\)` `\\{` `\\}` `\\N (in this context, N stands for a digit from 1 to 9)`
 
 
 
+Remark: Slash ```/``` is not a special character but nevertheless in sed and gawk needs to be escaped, due to conflict with internal syntax
+
+
+
 
 #### Dot ```.``` <a name="dot"></a>
-In BRE the dot ```.``` will match any single character, except newline. The character must be there (zero occurrences do not count), and space also counts as a character! It can be thought of as a sort of "variable" in regex, in analogy with the case where variable represents any value in arithmetic expression. It specifies a position that any character can fill. (TBI it seems that in awk dot matches also embedded new line => check)
+In BRE the dot ```.``` will match any single character, except newline. The character must be there (zero occurrences do not count), and space also counts as a character! It can be thought of as a sort of "variable" in regex, in analogy with the case where a variable represents any value in an arithmetic expression. It specifies a position that any character can fill. (TBI it seems that in awk dot matches also embedded new line => check)
 
 ```bash
 $ grep a.e <<< ace
 ace
 $ grep a.e <<< aze
 aze
-$ grep a.e <<< acce # it doesn't match, more than one character
+$ grep a.e <<< acce # it doesn't match, there is more than one character between "a" and "e"
 $ grep a..e <<< acce
 acce
-$ grep a...e <<< acce # it doesn't match, less that three characters
+$ grep a...e <<< acce # it doesn't match, there are less that three characters between "a" and "e"
 ```
 
 If we need to match the literal character ".", like in a decimal number 2.44, then it has to be escaped:
@@ -228,7 +235,7 @@ $ echo abc | grep "a[bx]c"
 abc
 $ echo axc | grep "a[bx]c"
 axc
-$ echo ayc | grep "a[bx]c" # doesn't match, "y" is not enlisted between [ and ]
+$ echo ayc | grep "a[bx]c" # doesn't match, "y" is not enlisted between "[" and "]"
 ```
 
 
@@ -241,9 +248,9 @@ TBI build a concrete example for 2 above
 
 Another common use case is to ignore in the search if the word was at the begininng of the sentence, and therefore capitalized, or not.
 ```bash
-$ echo someWord | grep "[sS]omeWord" # matches
+$ echo someWord | grep "[sS]omeWord"
 someWord
-$ echo SomeWord | grep "[sS]omeWord" # matches
+$ echo SomeWord | grep "[sS]omeWord"
 SomeWord
 ```
 
@@ -391,9 +398,9 @@ o can be used also in combination with character classes [...]
 
 The notation supported in ERE is ```{ ... }```, while notation ```\{ ... \}```  is used in BRE. For simplicity of notation, here only examples using ERE will be demonstrated, but they remain valid also in BRE, just each curly brace has to be escaped with backslah ```\```. 
 
-Regex ```{n,m}``` matches a range of occurrences of single character that immediately preceeds it (even if that character is regex itself), from n times to m times (lower and upper boundaries included)
+Regex ```{n,m}``` matches a range of occurrences of single character that immediately preceeds it (even if that character is regex itself), from ```n``` times to ```m``` times (lower and upper boundaries included).
 
-o specify limit on repeatable regex - interval
+o specify a limit on repeatable regex - interval
 
 o two formats for the interval (```n``` and ```m``` are integers between 0 and 255 TBI check these boundaries):
 
@@ -448,6 +455,78 @@ The repetion operator in regex, is not to be confused with brace expansio, TBI f
 
 
 
+o has no meaning by itself
+
+o example:
+
+^G[o]{2,}gle
+
+" matches Google, Gooogle, etc.
+
+? => find 0 or 1 <=> so ? is a shortcut for {0,1}  **BEAUTIFUL**
+
+- => find 1 or more <=> so + is a shortcut for {1,}  **BEAUTIFUL  AB**
+
+- => find 0 or more <=> so * is a shortcut for {0,}    **BEAUTIFUL AB**
+
+o examples:
+
+grep -E '^G[o]?gle' <<< "Ggle"
+
+Ggle
+
+grep -E '^G[o]?gle' <<< "Gogle"
+
+Gogle
+
+grep -E '^G[o]?gle' <<< "Google"
+
+nothing
+
+grep -E '^G[o]*gle' <<< "Ggle"
+
+Ggle
+
+grep -E '^G[o]*gle' <<< "Gogle"
+
+Gogle
+
+grep -E '^G[o]*gle' <<< "Google"
+
+Google
+
+grep -E '^G[o]*gle' <<< "Gooogle"
+
+Gooogle
+
+grep -E '^G[o]+gle' <<< "Ggle"
+
+nothing
+
+grep -E '^G[o]+gle' <<< "Gogle"
+
+Gogle
+
+grep -E '^G[o]+gle' <<< "Google"
+
+Google
+
+grep -E '^G[o]+gle' <<< "Gooogle"
+
+Gooogle
+
+o for a single character like above, [o] can be replaced with o **TBI AB check further**
+
+o for a compound expressions, use ( ) (can be nested, like braces in math!), and then { }
+
+$ grep -E '(\b(an|the)\ ){2,}' <<< "an an the the"
+
+an an the the
+
+
+
+
+
 #### Alternation operator ```|``` <a name="alternation"></a>
 
 Alternation operator ```|``` is supported in ERE and it stands for logical OR in regex. Schematically, it is used as follows
@@ -491,6 +570,18 @@ o not to be confused with pipe symbol TBI finalize + see if I can come with the 
 
 
 
+yields a match if any of the patterns match
+
+grep -E '^(first|second|third)' someFile
+
+o this is the same thing:
+
+grep -E '^(bat|Cat)' someFile
+
+grep -E '^[bC]at' someFile
+
+
+
 #### Grouping operator ```( ... )``` <a name="grouping"></a>
 
 We have already seen that a value can be stored in a variable by explicit assignment (using the operator 
@@ -502,6 +593,23 @@ We have already seen that a value can be stored in a variable by explicit assign
 - Example: `Big( Computer)?` — matches both “Big” and “Big Computer” **TBI test**
 - Example: `compan(y|ies)` — matches both “company” and “companies”
 - Example: `(^| )` — matches beginning of the line, or space
+
+
+
+(abc|def)+ => match a string that contains one or more occurrences of substrings 'abc' and 'def'
+
+
+
+o the group is treated like a standard character
+
+```bash
+$ echo "Sat" | egrep "Sat(urday)?"
+Sat
+$ echo "Saturday" | egrep "Sat(urday)?"
+Saturday
+```
+
+
 
 
 
@@ -584,13 +692,46 @@ unset "myArray[1]"
 
 Within quotes, ```[]``` is not treated as a glob.
 
-
 **Common idioms:**
-* (.*) will match any sequence of characters enclosed in parenthesses
+
+* ```(.*)``` &mdash; match any sequence of characters enclosed in parentheses
+* ``` [:alnum:]``` or ```[A-z0-9]``` &mdash; match any alpha-numeric character  =>  TBI 20240721 test
+* ``` [^[:alnum:]]``` or ```[^A-z0-9]``` &mdash; match anything, except alpha-numeric character  =>  TBI 20240721 test
+* ```X?``` &mdash; match no or one capital letter X
+* ```X*``` &mdash; match zero or more capital letters X
+* ```X+``` &mdash; match one or more capital letter X
+* ```X{n}``` &mdash; match exactly n constitutive capital X's (use with grep -E)
+* ```X{n,}``` &mdash; match at least n constitutive capital X's
+* ```X{n,m}``` &mdash; match at least n and not more than m constitutive capital X's
 
 
 
 Example:  [[:alpha:]!] — matches alphabetic characters and !
+
+
+
+grep -E -v '^$' someFile # filter out empty lines
+
+
+
+__Example__: Write a code snippet which matches strings against globs.
+
+```bash 
+case $file in
+    *.txt) process-as-text "$file ;;
+    *.png) ... ;;
+esac
+
+or
+
+if [[ $file = *.txt ]]; then
+    process-as-text "$file"
+elif [[ $file = *.png ]]; then
+    ...
+fi
+```
+
+
 
 
 
@@ -604,7 +745,7 @@ Example:  [[:alpha:]!] — matches alphabetic characters and !
    DD.MM.YYYY
    ```
 
-2. Write a regex which matches ORCID format — see Wikipedia entry for definition: https://en.wikipedia.org/wiki/ORCID
+2. Write a regex that matches ORCID format — see Wikipedia entry for definition: https://en.wikipedia.org/wiki/ORCID
 
 
 
@@ -613,8 +754,12 @@ Example:  [[:alpha:]!] — matches alphabetic characters and !
 ### 4. Further reading <a name="further.reading"></a>
 
 * _"Linux Command Line and Shell Scripting Bible"_, Richard Blum, Christine Bresnahan 
-	 * Chapter 20: Regular Expressions
+   * Chapter 20: Regular Expressions
 * _"sed & awk"_, Dale Dougherty, Arnold Robbins 
-	* Chapter 3: Understanding Regular Expression Syntax
-* _"UNIX A history and a Memoir"_, Brian Kernighan
-	* Section 4.6: Regular expressions 
+  * Chapter 3: Understanding Regular Expression Syntax
+* _"UNIX A History and a Memoir"_, Brian Kernighan
+  * Section 4.6: Regular expressions 
+* Linux manual page:
+   * https://man7.org/linux/man-pages/man7/glob.7.html ( or execute locally: ```$ man 7 glob``` )
+   * https://man7.org/linux/man-pages/man7/regex.7.html  ( or execute locally: ```$ man 7 regex``` )
+* Online regex checker: https://regex101.com/
