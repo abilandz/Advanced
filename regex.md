@@ -122,11 +122,11 @@ $ grep "\." someFile # OK, because \ is not a metacharacter within ""
 $ grep '\.' someFile # OK, because \ is not a metacharacter within ''
 2.44
 
-$ grep \. someFile # WRONG!! Shell already interpreted \ and what grep sees is the metacharacter .
+$ grep \. someFile # WRONG!! Shell interpreted \ and what grep obtained is only metacharacter .
 2.44
 244
 
-$ grep \\. someFile # OK, shell didn't interpret \ because it's escaped
+$ grep \\. someFile # OK, shell took the 2nd \ literally because it was escaped with \
 2.44
 ```
 
