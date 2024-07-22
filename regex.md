@@ -3,7 +3,7 @@
 
 # Regular expressions
 
-**Last update**: 20240721
+**Last update**: 20240722
 
 
 ### Table of Contents
@@ -16,9 +16,9 @@
 	
 2. [Metacharacters](#metacharacters)
 	
+	* [Dot](#dot)  ```.```
 	* [Asterisk](#asterisk) ```*```
 	* [Backslash](#backslash)  ```
-	* [Dot](#dot)  ```.```
 	* [Anchors](#anchors) ```^``` and ```$```
 	* [Character classes](#character.classes) ```[ ... ]``` 
 	* [Question mark](#question.mark) ```?```
@@ -38,13 +38,13 @@
 
 
 ### 1. What is a regular expression? <a name="what.is.regex"></a>
-A regular expression, or _regex_ for short, is a pattern template used to filter text in order to extract specific information. Or, looking from another angle, a regular expression is a pattern that describes a set of strings. Writing a regular expression is equivalent to creating a text filter. Patterns used to define regular expression contain symbols with special, non-literal meaning. In general, such special individual symbols or specific combinations of individual symbols, are named _metacharacters_. When interpreted directly by a shell to perform filename expansion (or _globbing_), metacharacters are called _wildcards_. To add to the confusion, some metacharacters have different meanings when used in regular expression or filename expansion. 
+A regular expression, or _regex_ for short, is a pattern template used to filter text in order to extract specific information. Or, looking from another angle, a regular expression is a pattern that describes a set of strings. Writing a regular expression is equivalent to creating a text filter. Patterns used to define regular expression contain symbols with special, non-literal meaning. In general, such special individual symbols or specific combinations of individual symbols, are named _metacharacters_. When interpreted directly by a shell to perform filename expansion (or _globbing_), metacharacters are called _wildcards_. To add to the confusion, some metacharacters have different meanings when used in regular expression or in filename expansion. 
 
 Historically, the first implementation and use of regular expression can be traced back to the late 1960s and Ken Thompson's re-implementation of line-oriented editor QED for Multics (an unsuccessful operating system that predated Unix). There are four major categories of regular expressions, and in what follows next, we attempt to systematize.
 
 
 #### Shell's wildcard expansion in filenames (globbing) <a name="globbing"></a>
-Each shell supports the process of matching expressions containing wildcards to filenames. As the basic example, in the following command input
+Each shell supports the process of matching expressions containing wildcards to filenames. In fact, one of the most important features of shell is to be able to operate on multiple files simultaneously. As the basic example, in the following command input
 ```bash
 ls -al *.txt
 ```
@@ -59,7 +59,7 @@ It is important to remember that when these special shell symbols are used in re
 
 * standardized by POSIX
 * metacharacters: ```.``` ```*``` ```[]``` ```^``` ```$``` ```\``` and compound repetition operator ```\{n,m\}```  
-* programs that support BRE: **ed**, **sed**, and **grep**
+* example programs that support BRE syntax: **ed**, **sed**, and **grep**
 
 
 #### Extended Regular Expression (ERE) <a name="ere"></a>
@@ -68,15 +68,15 @@ It is important to remember that when these special shell symbols are used in re
 * all metacharacters supported by BRE, only with a slightly different notation for compound repetition operator ```{n,m}```
 * additional metacharacters when compared to BRE: ```+``` ```?``` ```|``` ```()``` 
 * first implemented by Alfred Aho in 1979 in the extended version of __grep__ called __egrep__ 
-* programs that support ERE: **egrep** (or **grep -E**), **awk**, **sed -E**, operator **=~** in recent versions of **Bash**
+* example programs that support ERE syntax: **egrep** (or **grep -E**), **awk**, **sed -E**, operator **=~** (only in recent versions of **Bash** where it can be used within ```[[ ... ]]``` environment)
 
 #### Perl-Compatible Regular Expressions (PCRE) <a name="pcre"></a>
 
 * standalone library written in C ( [https://www.pcre.org/](https://www.pcre.org/) ), the most powerful implementation of regex, aimed initially to provide all regex features available in the **perl** programming language
 * use cases are rather limited in custom daily tasks, therefore not covered here in detail
-* PCRE syntax for regular expressions is supported in: **perl** (obviously), **grep -P**
+* PCRE syntax for regular expressions is supported, for instance, in: **perl** (obviously), **grep -P**, etc.
 
-In the next section, we systematically enlist all metacharacters and explain their use cases when they appear as shell wildcards (i.e. in globbing), in BRE, or in ERE.
+In the next section, we systematically enlist all metacharacters and explain their use cases when they appear as shell wildcards (i.e. in globbing), in BRE, or in ERE, using for testing **Bash**, **grep** or **egrep**, respectively.
 
 
 
@@ -89,8 +89,61 @@ Metacharacter is a symbol, or combination of symbols, with special and non-liter
 
 
 
+
+
+#### Dot ```.``` <a name="dot"></a>
+The metacharacter dot ```.``` has the special meaning only in BRE and ERE. The reason why it doesn't have any special meaning as a wildcard in globbing is originating from the fact that ```.``` as a literal character is already used heavily to denote hidden files (the files whose names begin with ```.``` , like in ".bashrc", and which are not listed by default with the __ls__ command), and to separate filename from file extension that identifies the file format (e.g. "someFile.txt" for ASCII file). 
+
+In regex the dot ```.``` will match any single character, except newline. The character must be present (zero occurrences do not count), and space also counts as a character. It can be thought of as a sort of "variable" in regex, in analogy with the case when a variable represents any value in an arithmetic expression. One can also say that dot ```.``` specifies a position that any character can fill. In globbing, the wildcard ```?``` has similar meaning (see below).
+
+Few simple examples when dot ```.``` is used as regex:
+
+```bash
+$ grep a.e <<< ace
+ace
+$ grep a.e <<< aze
+aze
+$ grep a.e <<< acce # it doesn't match, there is more than one character between "a" and "e"
+$ grep a..e <<< acce
+acce
+$ grep a...e <<< acce # it doesn't match, there are less than three characters between "a" and "e"
+```
+
+If the literal character "." needs to be matched, like in a decimal number 2.44, then it has to be escaped:
+
+```bash
+$ cat someFile # show the content of file "someFile"
+2.44
+244
+
+$ grep "\." someFile # OK, because \ is not a metacharacter within ""
+2.44
+
+$ grep '\.' someFile # OK, because \ is not a metacharacter within ''
+2.44
+
+$ grep \. someFile # WRONG!! Shell already interpreted \ and what grep sees is the metacharacter .
+2.44
+244
+
+$ grep \\. someFile # OK, shell didn't interpret \ because it's escaped
+2.44
+```
+
+
+
+To do: 20240722
+
+Example #1: Demonstrate that regex "Chapter." matches Chapter anywhere, except at the end of the line, because `.` doesn’t match end of line (TBI finalize this example)
+
+Exceptions:
+
+1. (TBI it seems that in awk dot matches also embedded new line => check
+
+
+
 #### Asterisk ```*``` <a name="asterisk"></a>
-1. In BRE, it will match any number (including zero) of repetitions of the preceding character or, in a more elaborate case, it will match zero or more occurrences of the preceding regular expression. By itself, the asterisk ```*``` matches nothing, it modifies what goes before it;
+1. In BRE and ERE, it will match any number (including zero) of repetitions of the preceding character or, in a more elaborate case, it will match zero or more occurrences of the preceding regular expression. By itself, the asterisk ```*``` matches nothing, it modifies what goes before it;
 
 2. As a shell wildcard, the meaning of the asterisk ```*``` is completely different &mdash; in this context, it stands for "zero or more characters."
 
@@ -157,43 +210,6 @@ only sed: These are metacharacters: `\\(` `\\)` `\\{` `\\}` `\\N (in this contex
 Remark: Slash ```/``` is not a special character but nevertheless in sed and gawk needs to be escaped, due to conflict with internal syntax
 
 
-
-
-#### Dot ```.``` <a name="dot"></a>
-In BRE the dot ```.``` will match any single character, except newline. The character must be there (zero occurrences do not count), and space also counts as a character! It can be thought of as a sort of "variable" in regex, in analogy with the case where a variable represents any value in an arithmetic expression. It specifies a position that any character can fill. (TBI it seems that in awk dot matches also embedded new line => check)
-
-```bash
-$ grep a.e <<< ace
-ace
-$ grep a.e <<< aze
-aze
-$ grep a.e <<< acce # it doesn't match, there is more than one character between "a" and "e"
-$ grep a..e <<< acce
-acce
-$ grep a...e <<< acce # it doesn't match, there are less that three characters between "a" and "e"
-```
-
-If we need to match the literal character ".", like in a decimal number 2.44, then it has to be escaped:
-```bash
-$ cat someFile
-2.44
-244
-
-$ grep "\." someFile # OK
-2.44
-
-$ grep '\.' someFile # OK
-2.44
-
-$ grep \. someFile # WRONG!! Shell already interpreted \ TBI check here the explanation
-2.44
-244
-```
-
-
-Example #1: Demonstrate that regex "Chapter." matches Chapter anywhere, except at the end of the line, because `.` doesn’t match end of line (TBI finalize this example)
-
-TBI do I comment on its meaning in globbing? As far as I know, it doesn't have any special meaning, but check further.
 
 
 
