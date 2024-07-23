@@ -170,26 +170,54 @@ $ grep \\. someFile # OK, shell took the 2nd \ literally because it was escaped 
 
 
 #### Asterisk ```*``` <a name="asterisk"></a>
-1. In BRE and ERE, it will match any number (including zero) of repetitions of the preceding character or, in a more elaborate case, it will match zero or more occurrences of the preceding regular expression. By itself, the asterisk ```*``` matches nothing, it modifies what goes before it;
+The metacharacter asterisk ```*``` deserves special attention because it has a different meaning when used in BRE and ERE, and when used as a wildcard in globbing. Since it is used very frequently in both cases, it is very important to fully grasp this difference in its meaning, depending on the context in which it is used. Here is the summary: 
 
+1. In BRE and ERE, asterisk ```*``` will match any number (including zero) of repetitions of the preceding character or, in a more elaborate case, it will match zero or more occurrences of the preceding regular expression. By itself, the asterisk ```*``` matches nothing, it only has an effect on what appears before it;
 2. As a shell wildcard, the meaning of the asterisk ```*``` is completely different &mdash; in this context, it stands for "zero or more characters."
 
-__Example 1__: Regex for "any number of characters (including 0 characters!)" is ```.*```
 
-__Example 2__: Regex ```A.*E``` matches ACE, AIRPLANE, A LONG WAY HOME, etc., but also it matches AE
+
+We first illustrate with a few examples its use in BRE and ERE.
+
+__Example 1__: Regex ```A*E``` matches E, AE, BE, AAE, BAE, A LONG WAY HOME, etc. In each of these cases, there are "zero or more occurrences" of character A before E. 
+
+__Example 2__: Regex ```AB*E``` matches AE, AAE, ABE, ABBE, AAE, AAEE, AABEE, etc., because in each of these cases, there are "zero or more occurrences" of character B after character A and before E. It does not match BE or BBE, because character A is missing before "zero or more occurrences" of character B. It does not match AB or ABB, because character E is missing after "zero or more occurrences" of character B.
+
+The metacharacter asterisk ```*``` works the same way when another metacharacter is preceding it, as it is illustrated in the next examples.  
+
+__Example 3__: Regex ```A.*E``` matches AE, ACE, AIRPLANE, A LONG WAY HOME, etc., because it matches "zero or more occurrences" of metacharacter dot ```.``` which itself stands for "any character". Therefore, compound regex ```.*``` can be interpreted as "zero or more occurrences of any characters".
+
+__Example 4__: Regex ```".*"``` will match any string within quotes. The span matched by it is always the longest possible.
+
+
+
+Finally, we illustrate with a few separate examples the usage of asterisk ```*```  as a wildcard in globbing, when it has a different meaning. 
+
+
+
+TBC 20240723
+
+
 
 
 - When it’s applied on a single character, that character may be there or not, and if it is, there may be more than one of them
 	
     - `[ab]c*` — matches “ab”, “abc”, “abcc” **(TBI this is my example, test it)**
     - `[ab]cc*` — matches “abc”, “abcc”, “abccc”, but not “ab” **(TBI this is my example, test it)**
+    
 - Classical examples:
     - `*` — matches one or more spaces
+    
     - `.*` — matches any number of any characters in regex (in filename expansion, the same effect is achieved just with a bare asterisk*). For instance, in regex "A.*E" will match "AE" "ABE", "ABBE", "A E", "AB BE BE", etc.   
-    - `".*"` — matches any string within quotes. The span matched by it is always longest possible
+    
+      
+    
     - "^  *.*" -- match a line with one or more leading spaces TBI do i move this one AFTER I introduce "^"? TBI Empty characters are not shown on the RHS... 
+    
     - `grep '<.*>' someHtml` — matches any formatting instruction in html
+    
     - `[no]*` — in combination with character classes, it matches any number of characters in that class, but also in any ordeer. So this would match no, nno, noo, , on, oon, onn, etc.  **(TBI test it)**
+    
 - Closure ⇒ the ability to match “zero or more” of something
 
 Note the difference here:
