@@ -3,7 +3,7 @@
 
 # Regular expressions
 
-**Last update**: 20240722
+**Last update**: 20240723
 
 
 ### Table of Contents
@@ -15,10 +15,10 @@
 	* [Perl-Compatible Regular Expressions (PCRE)](#pcre)
 	
 2. [Metacharacters](#metacharacters)
-	
+
+	* [Backslash](#backslash)  ```\```	
 	* [Dot](#dot)  ```.```
 	* [Asterisk](#asterisk) ```*```
-	* [Backslash](#backslash)  ```
 	* [Anchors](#anchors) ```^``` and ```$```
 	* [Character classes](#character.classes) ```[ ... ]``` 
 	* [Question mark](#question.mark) ```?```
@@ -85,16 +85,53 @@ In the next section, we systematically enlist all metacharacters and explain the
 
 ### 2. Metacharacters <a name="metacharacters"></a>
 
-Metacharacter is a symbol, or combination of symbols, with special and non-literal meaning in regular expressions and filename expansions. Despite its peculiar name, metacharacters are present all around us. In math, we are used to using metacharacters; for instance, in the arithmetic expression ```4 * 10```, we understand that metacharacter ```*``` represents multiplication. As another example, a combination of symbols ```\n``` is a composite metacharacter and is a common metacharacter for a new line.
+Metacharacter is a symbol, or combination of symbols, with special and non-literal meaning in regular expressions and filename expansions. Despite its peculiar name, metacharacters are present all around us. In math, we are used to using metacharacters; for instance, in the arithmetic expression ```4 * 10```, we understand that metacharacter ```*``` represents multiplication. As another example, a combination of symbols ```\n``` is a composite metacharacter and is a standard metacharacter for a new line.
 
 
+
+
+#### Backslash ```\``` <a name="backslash"></a>
+The backslash metacharacter ```\``` has the same meaning in globbing, BRE, and ERE. It is typically used in both directions, i.e. it turns:
+1. another metacharacter into an ordinary character (this is the standard _escape mechanism_), as in:
+	```bash
+	$ Var=44
+	$ echo $Var
+	44
+	$ echo \$Var
+	$Var
+	```
+
+​       In this context, a frequent use case is ```\\```, which stands for the literal backslash character ```\```. 	
+
+2. the ordinary characters into composite metacharacter (```\n``` is the standard composite metacharacter for a new line, ```\t``` for tab spacing, etc.):
+
+   ```bash
+   $ echo -e "a\nbb"
+   a
+   bb
+   $ echo -e "a\tbb"
+   a       bb
+   ```
+
+The frequent and distinct use case of ```\``` as a wildcard in globbing is to force literal interpretation of an empty character, instead of defaulting empty character to be input field separator. This is needed when files or directories have literal empty characters as part of their name, as this example illustrates:
+
+```bash
+$ mkdir 'Crazy name' # within strong quotes, empty character is literal empty character 
+$ ls Crazy name # empty character is metacharacter, i.e. field separator
+ls: cannot access 'Crazy': No such file or directory
+ls: cannot access 'name': No such file or directory
+$ ls Crazy\ name # OK
+$ ls 'Crazy name' # OK
+```
+
+In the end, we remark that unlike backslash ```\```, slash ```/``` is not a special character, but nevertheless, in **sed** and **awk**, it needs to be escaped due to conflict with internal syntax.
 
 
 
 #### Dot ```.``` <a name="dot"></a>
-The metacharacter dot ```.``` has the special meaning only in BRE and ERE. The reason why it doesn't have any special meaning as a wildcard in globbing is originating from the fact that ```.``` as a literal character is already used heavily to denote hidden files (the files whose names begin with ```.``` , like in ".bashrc", and which are not listed by default with the __ls__ command), and to separate filename from file extension that identifies the file format (e.g. "someFile.txt" for ASCII file). 
+The metacharacter dot ```.``` has a special meaning only in BRE and ERE. The reason why it doesn't have any special meaning as a wildcard in globbing originates from the fact that ```.``` as a literal character is already used to denote _hidden files_ (the files whose names begin with ```.``` , like in ".bashrc", and which are not listed by default with the __ls__ command), and to separate a filename from file extension that identifies the file format (e.g. ".txt" in "someFile.txt" to identify the plain ASCII text files). 
 
-In regex the dot ```.``` will match any single character, except newline. The character must be present (zero occurrences do not count), and space also counts as a character. It can be thought of as a sort of "variable" in regex, in analogy with the case when a variable represents any value in an arithmetic expression. One can also say that dot ```.``` specifies a position that any character can fill. In globbing, the wildcard ```?``` has similar meaning (see below).
+In regex the dot ```.``` will match any single character, except newline. The character must be present (zero occurrences do not count), and space also counts as a character. It can be thought of as a sort of "variable" in regex, in analogy with the case when a variable represents any value in an arithmetic expression. One can also say that dot ```.``` specifies a position that any character can fill. In globbing, the wildcard ```?``` has a similar meaning (see below).
 
 Few simple examples when dot ```.``` is used as regex:
 
@@ -126,19 +163,9 @@ $ grep \. someFile # WRONG!! Shell interpreted \ and what grep obtained is only 
 2.44
 244
 
-$ grep \\. someFile # OK, shell took the 2nd \ literally because it was escaped with \
+$ grep \\. someFile # OK, shell took the 2nd \ literally because it was escaped with the 1st \
 2.44
 ```
-
-
-
-To do: 20240722
-
-Example #1: Demonstrate that regex "Chapter." matches Chapter anywhere, except at the end of the line, because `.` doesn’t match end of line (TBI finalize this example)
-
-Exceptions:
-
-1. (TBI it seems that in awk dot matches also embedded new line => check
 
 
 
@@ -181,33 +208,6 @@ sed -n '/colou*r/p' # TBI prints lines holding both "color" and "colour"
 To do for this section:
 
 20240721 It's still a mess
-
-
-
-#### Backslash ```\``` <a name="backslash"></a>
-The backslash metacharacter ```\``` is typically used in both directions:
-1. It turns another metacharacter into an ordinary character (standard escape mechanism), as in:
-```bash
-$ Var=44
-$ echo $Var
-44
-$ echo \$Var
-$Var
-```
-
-​       In this context, a frequent use case is ```\\```, which searches for literal ```\```. 	
-
-2. It turns the ordinary characters into compound metacharacter (```\n``` is the standard compound metacharacter for a new line, ```\t``` for tab spacing, etc.).
-
-TBI do I comment on its meaning in globbing?
-
-TBI AB: If you need a literal search for metacharacter containing already `\\` , you have to escape it, like in `\\\\n` **TBI test this**
-
-only sed: These are metacharacters: `\\(` `\\)` `\\{` `\\}` `\\N (in this context, N stands for a digit from 1 to 9)`
-
-
-
-Remark: Slash ```/``` is not a special character but nevertheless in sed and gawk needs to be escaped, due to conflict with internal syntax
 
 
 
