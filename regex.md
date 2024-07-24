@@ -3,7 +3,7 @@
 
 # Regular expressions
 
-**Last update**: 20240723
+**Last update**: 20240724
 
 
 ### Table of Contents
@@ -116,8 +116,8 @@ The backslash metacharacter ```\``` has the same meaning in globbing, BRE, and E
 The frequent and distinct use case of ```\``` as a wildcard in globbing is to force literal interpretation of an empty character, instead of defaulting empty character to be input field separator. This is needed when files or directories have literal empty characters as part of their name, as this example illustrates:
 
 ```bash
-$ mkdir 'Crazy name' # within strong quotes, empty character is literal empty character 
-$ ls Crazy name # empty character is metacharacter, i.e. field separator
+$ mkdir 'Crazy name' # within strong quotes, empty character is a literal empty character 
+$ ls Crazy name # here empty character is metacharacter, i.e. field separator
 ls: cannot access 'Crazy': No such file or directory
 ls: cannot access 'name': No such file or directory
 $ ls Crazy\ name # OK
@@ -177,7 +177,7 @@ The metacharacter asterisk ```*``` deserves special attention because it has a d
 
 
 
-We first illustrate with a few examples its use in BRE and ERE.
+We first illustrate with a few examples the use of the metacharacter asterisk ```*``` in BRE and ERE.
 
 __Example 1__: Regex ```A*E``` matches E, AE, BE, AAE, BAE, A LONG WAY HOME, etc. In each of these cases, there are "zero or more occurrences" of character A before E. 
 
@@ -189,63 +189,86 @@ __Example 3__: Regex ```A.*E``` matches AE, ACE, AIRPLANE, A LONG WAY HOME, etc.
 
 __Example 4__: Regex ```".*"``` will match any string within quotes. The span matched by it is always the longest possible.
 
+__Example 5__: Regex ```   *``` (three empty characters before ```*```) will match all lines in the text in which there are words separated by two or more empty characters, instead by default one empty character:
 
-
-Finally, we illustrate with a few separate examples the usage of asterisk ```*```  as a wildcard in globbing, when it has a different meaning. 
-
-
-
-TBC 20240723
-
-
-
-
-- When it’s applied on a single character, that character may be there or not, and if it is, there may be more than one of them
-	
-    - `[ab]c*` — matches “ab”, “abc”, “abcc” **(TBI this is my example, test it)**
-    - `[ab]cc*` — matches “abc”, “abcc”, “abccc”, but not “ab” **(TBI this is my example, test it)**
-    
-- Classical examples:
-    - `*` — matches one or more spaces
-    
-    - `.*` — matches any number of any characters in regex (in filename expansion, the same effect is achieved just with a bare asterisk*). For instance, in regex "A.*E" will match "AE" "ABE", "ABBE", "A E", "AB BE BE", etc.   
-    
-      
-    
-    - "^  *.*" -- match a line with one or more leading spaces TBI do i move this one AFTER I introduce "^"? TBI Empty characters are not shown on the RHS... 
-    
-    - `grep '<.*>' someHtml` — matches any formatting instruction in html
-    
-    - `[no]*` — in combination with character classes, it matches any number of characters in that class, but also in any ordeer. So this would match no, nno, noo, , on, oon, onn, etc.  **(TBI test it)**
-    
-- Closure ⇒ the ability to match “zero or more” of something
-
-Note the difference here:
 ```bash
-$ grep *exam <<< exam # doesn't match
-$ grep .*exam <<< exam # matches
+$ cat someFile
+AAA BBB  CCC
+A B C
+A       BB
+
+$ grep "   *" someFile
+AAA BBB  CCC
+A       BB
+```
+
+__Example 6__: In this example we illustrate that the asterisk ```*``` by itself matches nothing:
+```bash
+$ grep *exam <<< exam # doesn't match, because there is no preceeding character
+$ grep .*exam <<< exam # matches, because there are zero or more occurrences of . in "exam"
 exam
 ```
 
-Finally, it can be used to elegantly diminish a difference between US and UK English in spelling:
+__Example 7__: Asterisk ```*``` an be used to elegantly diminish a difference between US and UK English in spelling:
 
 ```bash
-sed -n '/colou*r/p' # TBI prints lines holding both "color" and "colour"
+$ cat someFile
+This is color in in the text.
+And this in colour in the text.
+
+$ sed -n '/colou*r/p' someFile # print lines holding both "color" and "colour"
+This is color in in the text.
+And this in colour in the text.
 ````
 
-To do for this section:
-
-20240721 It's still a mess
 
 
+Finally, we illustrate with a few separate examples the usage of metacharacter asterisk ```*``` as a wildcard in globbing, when it has a different meaning. When used as a wildcard, asterisk ```*``` stands for "zero or more occurrences of any characters". To clarify the difference, we state that wildcard ```*``` in globbing acts the same way as regex ```.*```  in BRE or ERE.
+
+__Example 5__: TBI some text
+
+```bash
+$ touch file.pdf file_{0..3}.pdf
+$ ls 
+file_0.pdf  file_1.pdf  file_2.pdf  file_3.pdf  file.pdf
+$ ls f*
+file_0.pdf  file_1.pdf  file_2.pdf  file_3.pdf  file.pdf
+$ ls file*pdf
+file_0.pdf  file_1.pdf  file_2.pdf  file_3.pdf  file.pdf
+$ ls *pdf
+file_0.pdf  file_1.pdf  file_2.pdf  file_3.pdf  file.pdf
+```
+
+
+
+TBI 20240724 I still have to finalize the last part
 
 
 
 #### Anchors ```^``` and ```$``` <a name="anchors"></a>
 
-```^``` match the empty string that occurs at the beginning of a line or string
+The metacharacters caret (or circumflex) ```^``` and dollar ```$``` have a special meaning only in BRE and ERE. In this context, they are the so-called _anchors_, i.e. they stand for a special position in the line or string. In particular:
 
-```$``` match the empty string that occurs at the end of a line  (TBI 20240324 in awk, it matches the end of the string => test this)
+1. ```^``` matches the starting position within the string or of line;
+
+2. ```$``` matches the ending position within the string or of line.
+
+For instance, regex ```^A``` will match the string ABCD, because character A is at the starting position, but it will not match BACD. Similarly, regex ```D$``` will match the string ABCD, because character D is at the starting position, but it will not match BADC:
+
+```bash
+$ grep "^A" <<< "ABCD" # OK, because A is at starting position in string
+ABCD
+$ grep "^A" <<< "BACD" # doesn't match
+$ grep "D$" <<< "ABCD" # OK, because D is at ending position in string
+ABCD
+$ grep "D$" <<< "ABDC" # doesn't match
+```
+
+
+
+TBC 20240724
+
+
 
 Classic example: Filter out empty lines
 
@@ -267,6 +290,24 @@ Further examples:
 ```^.*$``` -- matches the entire line
 
 Important: in sed and grep, ```^``` and ```$``` are metacharacters only when at first and last place, respectively, in regex. In awk, they are always metacharacters in regex, irrespectively of their position- TBI 20240323 test this
+
+
+
+
+
+- - 
+
+- Classical examples:
+
+  - "^  *.*" -- match a line with one or more leading spaces TBI do i move this one AFTER I introduce "^"? TBI Empty characters are not shown on the RHS... 
+  - `grep '<.*>' someHtml` — matches any formatting instruction in html
+  - `[no]*` — in combination with character classes, it matches any number of characters in that class, but also in any ordeer. So this would match no, nno, noo, , on, oon, onn, etc.  **(TBI test it)**
+
+  
+
+Exceptions:
+
+(TBI 20240324 in awk, it matches the end of the string => test this)
 
 
 
@@ -367,6 +408,15 @@ Sometimes, ```[ ... ]``` is being referred to _bracket expression_ (not to be co
 o in awk (and only in awk), \ has to be used within [ ... ] to escape special meaning of charactersv TBI check this + i see this also being necessity in sed + provide example
 
 o TBI how to use [ or ] itself within [ ... ] ? Trivial escaping doesn't work
+
+
+
+TBI 20240724 use these examples as well:
+
+When it’s applied on a single character, that character may be there or not, and if it is, there may be more than one of them
+
+- `[ab]c*` — matches “ab”, “abc”, “abcc” **(TBI this is my example, test it)**
+- `[ab]cc*` — matches “abc”, “abcc”, “abccc”, but not “ab” **(TBI this is my example, test it)**
 
 
 
