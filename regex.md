@@ -3,7 +3,7 @@
 
 # Regular expressions
 
-**Last update**: 20240724
+**Last update**: 20240725
 
 
 ### Table of Contents
@@ -38,7 +38,7 @@
 
 
 ### 1. What is a regular expression? <a name="what.is.regex"></a>
-A regular expression, or _regex_ for short, is a pattern template used to filter text in order to extract specific information. Or, looking from another angle, a regular expression is a pattern that describes a set of strings. Writing a regular expression is equivalent to creating a text filter. Patterns used to define regular expression contain symbols with special, non-literal meaning. In general, such special individual symbols or specific combinations of individual symbols, are named _metacharacters_. When interpreted directly by a shell to perform filename expansion (or _globbing_), metacharacters are called _wildcards_. To add to the confusion, some metacharacters have different meanings when used in regular expression or in filename expansion. 
+A regular expression, or _regex_ for short, is a pattern template used to filter text in order to extract specific information. Or, looking from another angle, a regular expression is a pattern that describes a set of strings. Writing a regular expression is equivalent to creating a text filter. Patterns used to define regular expression contain symbols with special, non-literal meaning. In general, such special individual symbols or specific combinations of individual symbols, are named _metacharacters_. When interpreted directly by a shell to perform filename expansion (or _globbing_), metacharacters are called _wildcards_. Some metacharacters have different meanings when used in regular expression or in filename expansion. 
 
 Historically, the first implementation and use of regular expression can be traced back to the late 1960s and Ken Thompson's re-implementation of line-oriented editor QED for Multics (an unsuccessful operating system that predated Unix). There are four major categories of regular expressions, and in what follows next, we attempt to systematize.
 
@@ -50,9 +50,9 @@ ls -al *.txt
 ```
 shell will list all files whose names end with _.txt_ in the current working directory. In the above expression, ```*``` is a _wildcard_ and ```*.txt``` is a _glob_. Basically, _glob_ is a pattern containing one or more wildcards. Its name originates from the early-days Unix command named **glob** (shortcut for 'global'), which was used by the shell to expand wildcard characters in the list of file paths, and supply back that list of files to the command. Just like any other frequently used feature, this mechanism was eventually implemented directly into the shell.
 
-The standard and most frequent shell's wildcards used in filename expansions are: ```?``` ```*``` ```[]``` ```[!]``` ```{}``` ```\``` 
+The standard and most frequent wildcards or combination of wildcards used by the shell in filename expansions are: ```?``` ```*``` ```[]``` ```[!]``` ```{}``` ```\``` 
 
-It is important to remember that when these special shell symbols are used in regular expressions, their interpretation can be different. In addition, when specifying regex as a pattern in commands like **grep**, **find**, etc., that regex always needs to be embedded within strong quotes, schematically as ```'some-regex-with-special-symbols'```, so that these special symbols are not interpreted and expanded first by the shell as its wildcards, before supplying that regex to the command.
+It is important to remember that when these special shell symbols are used in regular expressions, their interpretation can be different. In addition, when specifying regex as a pattern in commands like **grep**, **find**, etc., that regex always needs to be embedded within strong quotes, schematically as ```'some-regex-with-special-symbols'```, so that these special symbols are not interpreted and expanded first by the shell as wildcards, before supplying that regex to the command.
 
 
 #### Basic Regular Expression (BRE) <a name="bre"></a>
@@ -72,7 +72,8 @@ It is important to remember that when these special shell symbols are used in re
 
 #### Perl-Compatible Regular Expressions (PCRE) <a name="pcre"></a>
 
-* standalone library written in C ( [https://www.pcre.org/](https://www.pcre.org/) ), the most powerful implementation of regex, aimed initially to provide all regex features available in the **perl** programming language
+* standalone library developed by Philip Hazel in 1997 and written in C ( [https://www.pcre.org/](https://www.pcre.org/) )
+* the most powerful implementation of regex, aimed initially to provide all regex features available in the **perl** programming language
 * use cases are rather limited in custom daily tasks, therefore not covered here in detail
 * PCRE syntax for regular expressions is supported, for instance, in: **perl** (obviously), **grep -P**, etc.
 
@@ -100,8 +101,7 @@ The backslash metacharacter ```\``` has the same meaning in globbing, BRE, and E
 	$ echo \$Var
 	$Var
 	```
-
-​       In this context, a frequent use case is ```\\```, which stands for the literal backslash character ```\```. 	
+	​	 In this context, a frequent use case is ```\\```, which stands for the literal backslash character ```\```. 	
 
 2. the ordinary characters into composite metacharacter (```\n``` is the standard composite metacharacter for a new line, ```\t``` for tab spacing, etc.):
 
@@ -113,23 +113,23 @@ The backslash metacharacter ```\``` has the same meaning in globbing, BRE, and E
    a       bb
    ```
 
-The frequent and distinct use case of ```\``` as a wildcard in globbing is to force literal interpretation of an empty character, instead of defaulting empty character to be input field separator. This is needed when files or directories have literal empty characters as part of their name, as this example illustrates:
+The frequent and distinct use case of ```\``` as a wildcard in globbing is to force literal interpretation of an empty character, instead of defaulting empty character to be input field separator. This is needed when files or directories have literal empty characters as part of their names, as this example illustrates:
 
 ```bash
 $ mkdir 'Crazy name' # within strong quotes, empty character is a literal empty character 
-$ ls Crazy name # here empty character is metacharacter, i.e. field separator
+$ ls Crazy name # here empty character is metacharacter, the default field separator
 ls: cannot access 'Crazy': No such file or directory
 ls: cannot access 'name': No such file or directory
 $ ls Crazy\ name # OK
 $ ls 'Crazy name' # OK
 ```
 
-In the end, we remark that unlike backslash ```\```, slash ```/``` is not a special character, but nevertheless, in **sed** and **awk**, it needs to be escaped due to conflict with internal syntax.
+In the end, we remark that unlike backslash ```\```, slash ```/``` is not a special character, but nevertheless in some programs, like in **sed** and **awk**, it needs to be escaped due to conflict with internal syntax.
 
 
 
 #### Dot ```.``` <a name="dot"></a>
-The metacharacter dot ```.``` has a special meaning only in BRE and ERE. The reason why it doesn't have any special meaning as a wildcard in globbing originates from the fact that ```.``` as a literal character is already used to denote _hidden files_ (the files whose names begin with ```.``` , like in ".bashrc", and which are not listed by default with the __ls__ command), and to separate a filename from file extension that identifies the file format (e.g. ".txt" in "someFile.txt" to identify the plain ASCII text files). 
+The metacharacter dot ```.``` has a special meaning only in BRE and ERE. The reason why it doesn't have any special meaning as a wildcard in globbing originates from the fact that ```.``` as a literal character is already used to denote _hidden files_ (the files whose names begin with ```.``` , like in ".bashrc", and which are not listed by default with the __ls__ command), and to separate a filename from file extension that identifies the file format (e.g. ".txt" in "someFile.txt" to identify the plain ASCII text file). 
 
 In regex the dot ```.``` will match any single character, except newline. The character must be present (zero occurrences do not count), and space also counts as a character. It can be thought of as a sort of "variable" in regex, in analogy with the case when a variable represents any value in an arithmetic expression. One can also say that dot ```.``` specifies a position that any character can fill. In globbing, the wildcard ```?``` has a similar meaning (see below).
 
@@ -170,9 +170,9 @@ $ grep \\. someFile # OK, shell took the 2nd \ literally because it was escaped 
 
 
 #### Asterisk ```*``` <a name="asterisk"></a>
-The metacharacter asterisk ```*``` deserves special attention because it has a different meaning when used in BRE and ERE, and when used as a wildcard in globbing. Since it is used very frequently in both cases, it is very important to fully grasp this difference in its meaning, depending on the context in which it is used. Here is the summary: 
+The metacharacter asterisk ```*``` deserves special attention because it has a different meaning when used in BRE and ERE on one side, or when used as a wildcard in globbing. Since it is used very frequently in both cases, it is very important to fully grasp the difference in its meaning, depending on the context in which it is used. Here is the summary: 
 
-1. In BRE and ERE, asterisk ```*``` will match any number (including zero) of repetitions of the preceding character or, in a more elaborate case, it will match zero or more occurrences of the preceding regular expression. By itself, the asterisk ```*``` matches nothing, it only has an effect on what appears before it;
+1. In BRE and ERE, asterisk ```*``` will match any number (including zero) of repetitions of the preceding character. In a more elaborate case, it will match zero or more occurrences of the preceding regular expression. By itself, the asterisk ```*``` matches nothing, it only has an effect on what appears before it;
 2. As a shell wildcard, the meaning of the asterisk ```*``` is completely different &mdash; in this context, it stands for "zero or more characters."
 
 
@@ -202,10 +202,10 @@ AAA BBB  CCC
 A       BB
 ```
 
-__Example 6__: In this example we illustrate that the asterisk ```*``` by itself matches nothing:
+__Example 6__: In this example we demonstrate that the asterisk ```*``` by itself matches nothing:
 ```bash
 $ grep *exam <<< exam # doesn't match, because there is no preceeding character
-$ grep .*exam <<< exam # matches, because there are zero or more occurrences of . in "exam"
+$ grep Y*exam <<< exam # matches, because there are zero or more occurrences of "Y" in "exam"
 exam
 ```
 
@@ -213,13 +213,19 @@ __Example 7__: Asterisk ```*``` an be used to elegantly diminish a difference be
 
 ```bash
 $ cat someFile
-This is color in in the text.
+This is color in the text.
 And this in colour in the text.
 
 $ sed -n '/colou*r/p' someFile # print lines holding both "color" and "colour"
-This is color in in the text.
+This is color in the text.
 And this in colour in the text.
 ````
+
+__Example 8__: Write a regex that matches any formatting instruction in html file.
+
+```bash
+grep '<.*>' someHtml
+```
 
 
 
@@ -249,65 +255,46 @@ TBI 20240724 I still have to finalize the last part
 
 The metacharacters caret (or circumflex) ```^``` and dollar ```$``` have a special meaning only in BRE and ERE. In this context, they are the so-called _anchors_, i.e. they stand for a special position in the line or string. In particular:
 
-1. ```^``` matches the starting position within the string or of line;
+1. ```^``` matches the starting position within a string or of a line;
 
-2. ```$``` matches the ending position within the string or of line.
+2. ```$``` matches the ending position within a string or of a line.
 
-For instance, regex ```^A``` will match the string ABCD, because character A is at the starting position, but it will not match BACD. Similarly, regex ```D$``` will match the string ABCD, because character D is at the starting position, but it will not match BADC:
+For instance, regex ```^A``` will match the string ABCD, because character A is at the starting position, but it will not match BACD. Similarly, regex ```D$``` will match the string ABCD, because character D is at the ending position, but it will not match BADC:
 
 ```bash
-$ grep "^A" <<< "ABCD" # OK, because A is at starting position in string
+$ grep "^A" <<< "ABCD" # OK, because A is at the starting position in string
 ABCD
 $ grep "^A" <<< "BACD" # doesn't match
-$ grep "D$" <<< "ABCD" # OK, because D is at ending position in string
+$ grep "D$" <<< "ABCD" # OK, because D is at the ending position in string
 ABCD
 $ grep "D$" <<< "ABDC" # doesn't match
 ```
 
+Classical example of using anchors ```^``` and ```$``` is to filter out blank lines from files. The special care has to be taken of whether blank line containts only a hidden new line metacharacter ```\n```, or in addition one or more empty spaces. 
 
-
-TBC 20240724
-
-
-
-Classic example: Filter out empty lines
-
+__Example 1__: Filter out all blank lines from file, assuming there are no one or more empty spaces on those lines. 
 ```bash
 awk '!/^$/' file
 sed '/^$/d' file
 grep -v '^$' file
-grep -v ^$ file
 ```
 
-Further examples:
+__Example 2__: Filter out all blank lines from file, where each line can contain or more empty spaces. 
+```bash
+awk '!/^ *$/' file
+sed '/^ *$/d' file
+grep -v '^ *$' file
+```
 
-```   *$```  -- matches lines with one or more empty characters at the end 
+Summary of further standard use cases of anchors:
 
-``` ^$``` -- matches blank lines
-
-```^ *$``` -- matches blank line in a file even if it contains some spaces
-
-```^.*$``` -- matches the entire line
-
-Important: in sed and grep, ```^``` and ```$``` are metacharacters only when at first and last place, respectively, in regex. In awk, they are always metacharacters in regex, irrespectively of their position- TBI 20240323 test this
-
-
-
+* ```    *$``` &mdash; matches lines with one or more empty characters at the end (there have to be two spaces before ```*``` )
+* ```^  *``` &mdash; matches a line with one or more leading spaces (there have to be two spaces before ```*``` )
+* ```^.*$``` &mdash; matches the entire line
 
 
-- - 
 
-- Classical examples:
-
-  - "^  *.*" -- match a line with one or more leading spaces TBI do i move this one AFTER I introduce "^"? TBI Empty characters are not shown on the RHS... 
-  - `grep '<.*>' someHtml` — matches any formatting instruction in html
-  - `[no]*` — in combination with character classes, it matches any number of characters in that class, but also in any ordeer. So this would match no, nno, noo, , on, oon, onn, etc.  **(TBI test it)**
-
-  
-
-Exceptions:
-
-(TBI 20240324 in awk, it matches the end of the string => test this)
+TBI 20240725 Write a bridge at the end
 
 
 
@@ -417,6 +404,12 @@ When it’s applied on a single character, that character may be there or not, a
 
 - `[ab]c*` — matches “ab”, “abc”, “abcc” **(TBI this is my example, test it)**
 - `[ab]cc*` — matches “abc”, “abcc”, “abccc”, but not “ab” **(TBI this is my example, test it)**
+
+
+
+TBI 20240725 use this example
+
+`[no]*` — in combination with character classes, it matches any number of characters in that class, but also in any ordeer. So this would match no, nno, noo, , on, oon, onn, etc.  **(TBI test it)**
 
 
 
