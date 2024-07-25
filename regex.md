@@ -279,7 +279,7 @@ sed '/^$/d' file
 grep -v '^$' file
 ```
 
-__Example 2__: Filter out all blank lines from file, where each line can contain or more empty spaces. 
+__Example 2__: Filter out all blank lines from file (i.e. lines which contain only a hidden new line metacharacter ```\n```), where each line can in addition contain also some empty spaces. 
 ```bash
 awk '!/^ *$/' file
 sed '/^ *$/d' file
