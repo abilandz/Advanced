@@ -288,8 +288,8 @@ grep -v '^ *$' file
 
 Summary of further standard use cases of anchors:
 
-* ```    *$``` &mdash; matches lines with one or more empty characters at the end (there have to be two spaces before ```*``` )
-* ```^  *``` &mdash; matches a line with one or more leading spaces (there have to be two spaces before ```*``` )
+* ```    *$``` &mdash; matches lines with one or more empty characters at the end (there have to be two or more spaces before ```*``` )
+* ```^  *``` &mdash; matches a line with one or more leading spaces (there have to be two or more spaces before ```*``` )
 * ```^.*$``` &mdash; matches the entire line
 
 
