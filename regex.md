@@ -3,7 +3,7 @@
 
 # Regular expressions
 
-**Last update**: 20240725
+**Last update**: 20240726
 
 
 ### Table of Contents
@@ -310,15 +310,23 @@ axc
 $ echo ayc | grep "a[bx]c" # doesn't match, "y" is not enlisted between "[" and "]"
 ```
 
-
 A very handy use case is to tolerate common misspellings when looking for a particular pattern:
 
-maint[ea]n[ea]nce
-l[au]nch
+```bash
+$ cat someFile
+maintanance
+maintenance
+maintanence
+maintenence
 
-TBI build a concrete example for 2 above
+$ grep "maint[ea]n[ea]nce" someFile
+maintanance
+maintenance
+maintanence
+maintenence
+```
 
-Another common use case is to ignore in the search if the word was at the begininng of the sentence, and therefore capitalized, or not.
+Another common use case is to ignore in the search if the word is at the begininng of the sentence, and therefore capitalized, or not.
 ```bash
 $ echo someWord | grep "[sS]omeWord"
 someWord
@@ -326,7 +334,7 @@ $ echo SomeWord | grep "[sS]omeWord"
 SomeWord
 ```
 
-Example for globbing:
+Usage of character classes ```[ ... ]``` in globbing is the same:
 ```bash
 $ ls
 someFile_1.txt	someFile_2.txt	someFile_3.txt	someFile_4.txt
@@ -334,59 +342,54 @@ $ ls someFile_[23].txt
 someFile_2.txt	someFile_3.txt 
 ```
 
-Ranges are also supported with "-", for instance:
-```bash
-$ ls
-someFile_1.txt	someFile_2.txt	someFile_3.txt	someFile_4.txt
-$ ls someFile_[1-3].txt
-someFile_1.txt	someFile_2.txt	someFile_3.txt 
-```
-
-Multiple ranges are also fine, e.g.
-
-```bash
-$ ls
-file_A.txt	file_B.txt	file_C.txt	file_D.txt	file_E.txt	file_F.txt	file_G.txt	file_H.txt
-$ ls file_[A-CF-H].txt
-file_A.txt	file_B.txt	file_C.txt 	file_F.txt 	file_G.txt 	file_H.txt 
-```
-
 Inside ```[ ... ]``` the standard metacharacters loose their special meaning
 ```bash
 $ echo '$Var' | grep '[$?]ar'
 $Var
 $ echo '.file' | grep '[.]file'
-file
+.file
 ```
 
-However, the notation ```[ ... ]``` supports two of its own metacharacters: ```-``` and ```^```. 
-The symbol ```-``` is a metacharacter within ```[ ... ]``` only if it does not appear at the first or at the last position -- at any other position it has a special meaning and it indicates the range between two surrounding symbols.
+However, the notation ```[ ... ]``` supports two of its own metacharacters: ```-``` and ```^```.  The symbol ```-``` is a metacharacter within ```[ ... ]``` only if it does not appear at the first or at the last position &mdash; at any other position it has a special meaning and it indicates the range between two surrounding symbols.
 
 ```bash
-$ touch file_A.txt	file_B.txt	file_C.txt	file_D.txt	file_E.txt	file_F.txt	file_G.txt	file_H.txt # or use in Bash brace expansion: touch file_{A..H}.txt
+$ touch file_A.txt file_B.txt file_C.txt file_D.txt	file_E.txt 
 $ ls file_[B-D]
 file_B.txt	file_C.txt 	file_D.txt 
 ```
 
-Example: Write the regex which matches any of the 4 arithmetic operators + - * \ 
+__Example__: Write the regex which matches any of the 4 arithmetic operators: "+", "-", "*", and "\\". 
+
+- ```[-+*\]``` and ```[+*\-]``` are both correct. Within ```[ ... ]```, the symbol ```-``` at the very beginning or at the very end is not a metacharacter;
+- ```[+-*\]``` is wrong, because here the symbol ```-``` is in the middle, and is interpreted as a metacharacter which indicates range between symbols "+" and "*", which is ill-defined
 
 ```bash
-[-+*\] # Correct. Within [ ... ], - at the beginning is not a metacharacter 
-[+*\-] # Correct. Within [ ... ], - at the end is not a metacharacter 
-[+-*\] # Wrong. here - is the metacharacters, and indicates range between + and *, which is ill-defined. 
-
-TBI In awk, this is fine:  [+\-*\] ⇒ but who can read this now? TBI test this
+TBI 20240726 Related to this example In awk, this is fine:  [+\-*\] ⇒ but who can read this now? TBI test this
 ```
 
-The symbol ```^``` (_circumflex_ or _caret_) is a metacharacter within ```[ ... ]``` only if it appears at the very first position &mdash; at any other position, it doesn't have any special meaning. Therefore, the regex ```[^...]``` has the following special meaning: ```^``` in the first place excludes all following characters from being matched. For instance:
+Multiple ranges are also fine, e.g.
 
 ```bash
-$ touch file_A.txt	file_B.txt	file_C.txt	file_D.txt	file_E.txt	file_F.txt	file_G.txt	file_H.txt # or use in Bash brace expansion: touch file_{A..H}.txt
+$ touch file_A.txt file_B.txt file_C.txt file_D.txt file_1.txt file_2.txt file_3.txt file_4.txt
+$ ls file_[A-C2-4].txt
+file_2.txt  file_3.txt  file_4.txt  file_A.txt	file_B.txt	file_C.txt
+```
+
+On the other hand, the symbol ```^``` (_circumflex_ or _caret_) is a metacharacter within ```[ ... ]``` only if it appears at the very first position &mdash; at any other position, including the last position, it doesn't have any special meaning. Therefore, the regex ```[^...]``` has the following special meaning: ```^``` in the first place excludes all following characters within ```[ ... ]``` from being matched. For instance:
+
+```bash
+$ touch file_A.txt file_B.txt file_C.txt file_D.txt file_E.txt file_F.txt file_G.txt file_H.txt
 $ ls file_[^ACF].txt
 file_B.txt	file_D.txt 	file_E.txt 	file_G.txt 	file_H.txt 
 ```
 
-Only in globbing, the synonym for ```[^...]``` is ```[!...]```. But because the notation ```[!...]``` does not have any special meaning in BRE or in ERE, and to avoid confusion, we recommend the usage only of  metacharacter ```[^...]``` in any context.
+Only in globbing, the synonym for regex ```[^...]``` is ```[!...]```. But because the notation ```[!...]``` does not have any special meaning in BRE or in ERE, and to avoid confusion, we recommend the usage only of regex ```[^...]``` in this context.
+
+
+
+TBC 20240726
+
+
 
 Special case: ```]``` as the first character is just a character (i.e. not a metacharacter, like when it’s on any other place). AB: So, this regex is fine: ```[]]```  ⇒ first ```]``` is a character, second one is metacharacter. TBI 20240224 test all this + check this Special case #4: only in awk, ```\``` escapes any metacharacter, so only on awk this is possible ```[a\]1]```
 
@@ -410,6 +413,8 @@ When it’s applied on a single character, that character may be there or not, a
 TBI 20240725 use this example
 
 `[no]*` — in combination with character classes, it matches any number of characters in that class, but also in any ordeer. So this would match no, nno, noo, , on, oon, onn, etc.  **(TBI test it)**
+
+
 
 
 
