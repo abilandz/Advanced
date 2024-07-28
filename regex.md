@@ -3,7 +3,7 @@
 
 # Regular expressions
 
-**Last update**: 20240726
+**Last update**: 20240728
 
 
 ### Table of Contents
@@ -300,7 +300,7 @@ TBI 20240725 Write a bridge at the end
 
 #### Character classes ```[ ... ]``` <a name="character.classes"></a>
 
-Character classes ```[ ... ]``` work the same way in globbing, BRE and ERE, and they provide a more specific variant of ```.``` metacharacter. Basically, ```.``` metacharacter would match any single character, while ```[ ... ]``` matches any single character enlisted between ```[``` and ``` ]```.
+Character classes ```[ ... ]``` (or sometimes being referred to as _bracket expression_) work the same way in globbing, BRE and ERE, and they provide a more specific variant of ```.``` metacharacter. Basically, ```.``` metacharacter would match any single character, while ```[ ... ]``` matches any single character enlisted between ```[``` and ``` ]```.
 
 ```bash
 $ echo abc | grep "a[bx]c"
@@ -342,7 +342,7 @@ $ ls someFile_[23].txt
 someFile_2.txt	someFile_3.txt 
 ```
 
-Inside ```[ ... ]``` the standard metacharacters loose their special meaning
+Inside ```[ ... ]``` the standard metacharacters loose their special meaning:
 ```bash
 $ echo '$Var' | grep '[$?]ar'
 $Var
@@ -350,7 +350,7 @@ $ echo '.file' | grep '[.]file'
 .file
 ```
 
-However, the notation ```[ ... ]``` supports two of its own metacharacters: ```-``` and ```^```.  The symbol ```-``` is a metacharacter within ```[ ... ]``` only if it does not appear at the first or at the last position &mdash; at any other position it has a special meaning and it indicates the range between two surrounding symbols.
+However, the notation ```[ ... ]``` supports two of its own metacharacters: ```-``` and ```^```.  The symbol ```-``` is a metacharacter within ```[ ... ]``` only if it does not appear at the first or at the last position &mdash; at any other position it has a special meaning and it indicates the _range_ between two surrounding symbols.
 
 ```bash
 $ touch file_A.txt file_B.txt file_C.txt file_D.txt	file_E.txt 
@@ -383,36 +383,25 @@ $ ls file_[^ACF].txt
 file_B.txt	file_D.txt 	file_E.txt 	file_G.txt 	file_H.txt 
 ```
 
-Only in globbing, the synonym for regex ```[^...]``` is ```[!...]```. But because the notation ```[!...]``` does not have any special meaning in BRE or in ERE, and to avoid confusion, we recommend the usage only of regex ```[^...]``` in this context.
+Only in globbing, the synonym for regex ```[^...]``` is ```[!...]```. But because the notation ```[!...]``` does not have any special meaning in BRE or in ERE, and to avoid confusion, we recommend the usage only of regex ```[^...]``` in any context.
 
+Finally, we need to clarify how the characters ```[``` and ```]``` themselves are treated within character classes ```[ ... ]``` . The character ```]``` as the first character within is just a character (i.e. not a metacharacter, like when it’s on any other place). The same applies to character ```[``` , as the following example illustrates:
 
+```bash 
+$ grep "[]]" <<< "]"
+]
+$ grep "[[]" <<< "["
+[
+```
 
-TBC 20240726
+Character classes ```[ ... ]``` can be naturally combined with other metacharacters, for instance:
 
+- `[ab]c*` — matches “ab”, “abc”, “abcc”, but also "a", "b", "ac", "acc", "bc", "bcc", etc.
+- `[ab]cc*` — matches "ac", "bc", “abc”, “abcc”, “abccc”, but not  "a", "b", “ab”, etc.
 
+In the above example, asterisk ```*``` had an effect only on a single preceding character "c". But we can make asterisk ```*``` acting directly on character classes ```[ ... ]``` , when the final result is different. In combination with character classes, ```*``` matches any number of characters in that class, but also in any order:
 
-Special case: ```]``` as the first character is just a character (i.e. not a metacharacter, like when it’s on any other place). AB: So, this regex is fine: ```[]]```  ⇒ first ```]``` is a character, second one is metacharacter. TBI 20240224 test all this + check this Special case #4: only in awk, ```\``` escapes any metacharacter, so only on awk this is possible ```[a\]1]```
-
-Sometimes, ```[ ... ]``` is being referred to _bracket expression_ (not to be confused with Bash (TBI check also other shells) _brace expansion_ ```{...}```, which has entirely different meaning (TBI do I really need this here?)
-
-o in awk (and only in awk), \ has to be used within [ ... ] to escape special meaning of charactersv TBI check this + i see this also being necessity in sed + provide example
-
-o TBI how to use [ or ] itself within [ ... ] ? Trivial escaping doesn't work
-
-
-
-TBI 20240724 use these examples as well:
-
-When it’s applied on a single character, that character may be there or not, and if it is, there may be more than one of them
-
-- `[ab]c*` — matches “ab”, “abc”, “abcc” **(TBI this is my example, test it)**
-- `[ab]cc*` — matches “abc”, “abcc”, “abccc”, but not “ab” **(TBI this is my example, test it)**
-
-
-
-TBI 20240725 use this example
-
-`[no]*` — in combination with character classes, it matches any number of characters in that class, but also in any ordeer. So this would match no, nno, noo, , on, oon, onn, etc.  **(TBI test it)**
+- `[no]*` — matches "n", "nn", "nnn", "o", "oo", "ooo", "no", "nno", "noo", "on", "oon", "onn", etc. It will match also "abc" because that would correspond to "zero occurences either of "n" or "o". TBI 20240728 this is not really a usefuly regex . re-think if I nedd this example at all
 
 
 
@@ -420,15 +409,50 @@ TBI 20240725 use this example
 
 #### Question mark ```?``` <a name="question.mark"></a>
 
-1. Shell wildcard:  any single character
+The metacharacter question mark ```?``` is not supported in BRE. When used in ERE or when used as a wildcard in globbing it has a different meaning: 
+
+1. In ERE, the question mark ```?``` matches zero or one occurrences of the preceeding character or regex. If it occurs more than once, it doesn't match. By itself, the question mark ```?``` matches nothing, it only has an effect on what appears before it;
+2. As a shell wildcard, the question mark ```?``` stands for "any single character". Therefore, metacharacter ```?``` in globbing acts the same way as metacharacter ```.``` in BRE and ERE.
+
+We first illustrate usage of question mark ```?``` in ERE:
+
+```bash
+$ egrep "ab?c" <<< "ac" # matches, because ? acts on "b", which occurs zero times
+ac
+$ egrep "ab?c" <<< "abc" # matches, because ? acts on "b", which occurs once
+abc
+$ egrep "ab?c" <<< "abbc" # doesn't match, because ? acts on "b", which occurs more than once
+$ egrep "ab?c" <<< "abcc" # matches
+abcc
+```
+
+In BRE, question mark ```?``` is not a metacharacter:
+
+```bash
+$ grep "ab?c" <<< "ac" # doesn't match, in BRE "?" is a literal character
+$ grep "ab?c" <<< "ab?c" # matches, in BRE "?" is a literal character
+ab?c
+```
+
+In globbing, the question mark ```?``` stands for "any single character":
+
+```bash
+$ touch file_0.log file_A.log file_10.log file_AB.log
+$ ls file_?.log
+file_0.log  file_A.log
+$ ls file_??.log
+file_10.log  file_AB.log
+$ ls file_???.log # doesn't match any file, globbing failed
+ls: cannot access 'file_???.log': No such file or directory
+```
 
 
 
-o the preceding character can appear 0 or one time. And that's it. If it appears more than once, it doesn't match
 
-o "may or may not appear"
 
-o combination
+TBC combination with other regexes
+
+
 
 [xy]?
 
@@ -436,32 +460,9 @@ matches if: x and y do not appear. x or y appear.
 
 doesn't match of: both x and y appear. x or y appear 2 or more times.
 
-```bash
-$ echo "ac" | egrep "ab?c"
-ac
-$ echo "abc" | egrep "ab?c"
-abc
-$ echo "abbc" | egrep "ab?c"
-$
-$ echo "abcc" | egrep "ab?c"
-abcc
-```
 
-
-
-`?` — matches zero or one occurrences of the preceeding regex
 
 - `80[234]?86` would match 80286, 80386, 80486, but also 8086,
-
-- Important: Shell’s wildcard ? has different meaning — it stands for single character, like 
-
-  ```
-  .
-  ```
-
-   in regex
-
-  - `?` wildcard in shell — `.` in regex
 
 
 
