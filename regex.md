@@ -3,7 +3,7 @@
 
 # Regular expressions
 
-**Last update**: 20240728
+**Last update**: 20240729
 
 
 ### Table of Contents
@@ -46,7 +46,7 @@ Historically, the first implementation and use of regular expression can be trac
 #### Shell's wildcard expansion in filenames (globbing) <a name="globbing"></a>
 Each shell supports the process of matching expressions containing wildcards to filenames. In fact, one of the most important features of shell is to be able to operate on multiple files simultaneously. As the basic example, in the following command input
 ```bash
-ls -al *.txt
+ls *.txt
 ```
 shell will list all files whose names end with _.txt_ in the current working directory. In the above expression, ```*``` is a _wildcard_ and ```*.txt``` is a _glob_. Basically, _glob_ is a pattern containing one or more wildcards. Its name originates from the early-days Unix command named **glob** (shortcut for 'global'), which was used by the shell to expand wildcard characters in the list of file paths, and supply back that list of files to the command. Just like any other frequently used feature, this mechanism was eventually implemented directly into the shell.
 
@@ -55,20 +55,20 @@ The standard and most frequent wildcards or combination of wildcards used by the
 It is important to remember that when these special shell symbols are used in regular expressions, their interpretation can be different. In addition, when specifying regex as a pattern in commands like **grep**, **find**, etc., that regex always needs to be embedded within strong quotes, schematically as ```'some-regex-with-special-symbols'```, so that these special symbols are not interpreted and expanded first by the shell as wildcards, before supplying that regex to the command.
 
 
-#### Basic Regular Expression (BRE) <a name="bre"></a>
+#### Basic Regular Expressions (BRE) <a name="bre"></a>
 
 * standardized by POSIX
 * metacharacters: ```.``` ```*``` ```[]``` ```^``` ```$``` ```\``` and compound repetition operator ```\{n,m\}```  
 * example programs that support BRE syntax: **ed**, **sed**, and **grep**
 
 
-#### Extended Regular Expression (ERE) <a name="ere"></a>
+#### Extended Regular Expressions (ERE) <a name="ere"></a>
 
 * standardized by POSIX
 * all metacharacters supported by BRE, only with a slightly different notation for compound repetition operator ```{n,m}```
 * additional metacharacters when compared to BRE: ```+``` ```?``` ```|``` ```()``` 
 * first implemented by Alfred Aho in 1979 in the extended version of __grep__ called __egrep__ 
-* example programs that support ERE syntax: **egrep** (or **grep -E**), **awk**, **sed -E**, operator **=~** (only in recent versions of **Bash** where it can be used within ```[[ ... ]]``` environment)
+* example programs that support ERE syntax: **egrep** (or **grep -E**), **awk**, **sed -E**, operator **=~** (only in recent **Bash** versions where it can be used only within ```[[ ... ]]``` environment)
 
 #### Perl-Compatible Regular Expressions (PCRE) <a name="pcre"></a>
 
@@ -77,7 +77,7 @@ It is important to remember that when these special shell symbols are used in re
 * use cases are rather limited in custom daily tasks, therefore not covered here in detail
 * PCRE syntax for regular expressions is supported, for instance, in: **perl** (obviously), **grep -P**, etc.
 
-In the next section, we systematically enlist all metacharacters and explain their use cases when they appear as shell wildcards (i.e. in globbing), in BRE, or in ERE, using for testing **Bash**, **grep** or **egrep**, respectively.
+In the next section, we systematically enlist all metacharacters and explain their use cases when they appear as shell wildcards in globbing, or as regex in BRE and ERE. For testing purposes, we use mostly **Bash** (globbing), **grep** (BRE) or **egrep** (ERE).
 
 
 
@@ -172,10 +172,8 @@ $ grep \\. someFile # OK, shell took the 2nd \ literally because it was escaped 
 #### Asterisk ```*``` <a name="asterisk"></a>
 The metacharacter asterisk ```*``` deserves special attention because it has a different meaning when used in BRE and ERE on one side, or when used as a wildcard in globbing. Since it is used very frequently in both cases, it is very important to fully grasp the difference in its meaning, depending on the context in which it is used. Here is the summary: 
 
-1. In BRE and ERE, asterisk ```*``` will match any number (including zero) of repetitions of the preceding character. In a more elaborate case, it will match zero or more occurrences of the preceding regular expression. By itself, the asterisk ```*``` matches nothing, it only has an effect on what appears before it;
+1. In BRE and ERE, asterisk ```*``` will match any number (including zero) of repetitions of the preceding character. In a more elaborate case, it will match zero or more occurrences of the preceding regular expression. By itself, the asterisk ```*``` matches nothing, it only has an effect on what appears before it. There exists a corner case when ```*``` behaves differently in BRE and ERE &mdash; as the first character of an entire BRE or after an initial `^` in BRE, asterisk ```*``` loses its special meaning, while in ERE in this case it will produce undefined results;
 2. As a shell wildcard, the meaning of the asterisk ```*``` is completely different &mdash; in this context, it stands for "zero or more characters."
-
-
 
 We first illustrate with a few examples the use of the metacharacter asterisk ```*``` in BRE and ERE.
 
@@ -207,6 +205,7 @@ __Example 6__: In this example we demonstrate that the asterisk ```*``` by itsel
 $ grep *exam <<< exam # doesn't match, because there is no preceeding character
 $ grep Y*exam <<< exam # matches, because there are zero or more occurrences of "Y" in "exam"
 exam
+$ grep "^*exam" <<< exam # doesn't match, this combination "^*" is the corner case, see above 
 ```
 
 __Example 7__: Asterisk ```*``` an be used to elegantly diminish a difference between US and UK English in spelling:
@@ -411,22 +410,22 @@ In the above example, asterisk ```*``` had an effect only on a single preceding 
 
 The metacharacter question mark ```?``` is not supported in BRE. When used in ERE or when used as a wildcard in globbing it has a different meaning: 
 
-1. In ERE, the question mark ```?``` matches zero or one occurrences of the preceeding character or regex. If it occurs more than once, it doesn't match. By itself, the question mark ```?``` matches nothing, it only has an effect on what appears before it;
+1. In ERE, the question mark ```?``` matches zero or one occurrences of the preceeding character or of the preceeding regex. If the preceeding character or regex occur more than once, it doesn't match. By itself, the question mark ```?``` matches nothing, it only has an effect on what appears before it. There exists a corner case when ```?``` behaves differently &mdash; as the first character of an entire ERE or after an initial `^` in ERE, the question mark ```?``` produces undefined results;
 2. As a shell wildcard, the question mark ```?``` stands for "any single character". Therefore, metacharacter ```?``` in globbing acts the same way as metacharacter ```.``` in BRE and ERE.
 
-We first illustrate usage of question mark ```?``` in ERE:
+We first illustrate the usage of question mark ```?``` in ERE:
 
 ```bash
-$ egrep "ab?c" <<< "ac" # matches, because ? acts on "b", which occurs zero times
+$ egrep "ab?c" <<< "ac" # matches, because ? acts on "b" which occurs zero times
 ac
-$ egrep "ab?c" <<< "abc" # matches, because ? acts on "b", which occurs once
+$ egrep "ab?c" <<< "abc" # matches, because ? acts on "b" which occurs once
 abc
-$ egrep "ab?c" <<< "abbc" # doesn't match, because ? acts on "b", which occurs more than once
+$ egrep "ab?c" <<< "abbc" # doesn't match, because ? acts on "b" which occurs more than once
 $ egrep "ab?c" <<< "abcc" # matches
 abcc
 ```
 
-In BRE, question mark ```?``` is not a metacharacter:
+In BRE, the question mark ```?``` is not a metacharacter:
 
 ```bash
 $ grep "ab?c" <<< "ac" # doesn't match, in BRE "?" is a literal character
@@ -446,11 +445,29 @@ $ ls file_???.log # doesn't match any file, globbing failed
 ls: cannot access 'file_???.log': No such file or directory
 ```
 
+This is the corner case, which deserves a special attention:
 
+```bash
+$ egrep "?exam" <<< exam # undefined behaviour, here it matches, but this is not guaranteed
+exam
+$ egrep "Y?exam" <<< exam # matches, because there are zero or one occurrences of "Y" in "exam"
+exam
+$ egrep "^?exam" <<< exam # undefined behaviour, here it matches, but this is not guaranteed 
+exam
+```
 
 
 
 TBC combination with other regexes
+
+
+
+TBI 20240729 I do not understand this:
+
+$ egrep "Y?exam" <<< YYYexam # matches
+YYYexam
+
+egrep "aY?exam" <<< YYYexam # doesn't match
 
 
 
@@ -853,6 +870,8 @@ fi
 * _"UNIX A History and a Memoir"_, Brian Kernighan
   * Section 4.6: Regular expressions 
 * Linux manual page:
-   * https://man7.org/linux/man-pages/man7/glob.7.html ( or execute locally: ```$ man 7 glob``` )
-   * https://man7.org/linux/man-pages/man7/regex.7.html  ( or execute locally: ```$ man 7 regex``` )
+   * [glob][https://man7.org/linux/man-pages/man7/glob.7.html] ( or execute locally: ```$ man 7 glob``` )
+   * [regex][https://man7.org/linux/man-pages/man7/regex.7.html] ( or execute locally: ```$ man 7 regex``` )
+* POSIX standard
+   * [Chapter 9: "Regular Expressions"][https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html]
 * Online regex checker: https://regex101.com/
