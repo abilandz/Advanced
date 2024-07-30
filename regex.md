@@ -3,7 +3,7 @@
 
 # Regular expressions
 
-**Last update**: 20240729
+**Last update**: 20240730
 
 
 ### Table of Contents
@@ -410,19 +410,23 @@ In the above example, asterisk ```*``` had an effect only on a single preceding 
 
 The metacharacter question mark ```?``` is not supported in BRE. When used in ERE or when used as a wildcard in globbing it has a different meaning: 
 
-1. In ERE, the question mark ```?``` matches zero or one occurrences of the preceeding character or of the preceeding regex. If the preceeding character or regex occur more than once, it doesn't match. By itself, the question mark ```?``` matches nothing, it only has an effect on what appears before it. There exists a corner case when ```?``` behaves differently &mdash; as the first character of an entire ERE or after an initial `^` in ERE, the question mark ```?``` produces undefined results;
+1. In ERE, the question mark ```?``` matches zero or one occurrences of the preceeding character or of the preceeding regex. Therefore, ```?``` makes the preceeding character or regex optional. By itself, the question mark ```?``` matches nothing, it only has an effect on what appears before it. There exists a corner case when ```?``` behaves differently &mdash; as the first character of an entire ERE or after an initial `^` in ERE, the question mark ```?``` produces undefined results;
 2. As a shell wildcard, the question mark ```?``` stands for "any single character". Therefore, metacharacter ```?``` in globbing acts the same way as metacharacter ```.``` in BRE and ERE.
 
 We first illustrate the usage of question mark ```?``` in ERE:
 
 ```bash
-$ egrep "ab?c" <<< "ac" # matches, because ? acts on "b" which occurs zero times
+$ egrep "ab?c" <<< "ac" # matches, because "ac" (zero occurences of "b") matches "ac"
 ac
-$ egrep "ab?c" <<< "abc" # matches, because ? acts on "b" which occurs once
+$ egrep "ab?c" <<< "abc" # matches, because "abc" (one occurence of "b") matches "abc"
 abc
-$ egrep "ab?c" <<< "abbc" # doesn't match, because ? acts on "b" which occurs more than once
-$ egrep "ab?c" <<< "abcc" # matches
+$ egrep "ab?c" <<< "abbc" # doesn't match, because neither "ac" nor "abc" match "abbc"
+$ egrep "b?c" <<< "bbc" # matches, because both "c" and "bc" match "bbc"
+bbc
+$ egrep "ab?c" <<< "abcc" # matches, because "abc" (one occurence of "b") matches "abcc"
 abcc
+$ egrep "ab?c" <<< "acc" # matches, because "ac" (zero occurences of "b") matches "acc"
+acc
 ```
 
 In BRE, the question mark ```?``` is not a metacharacter:
@@ -445,12 +449,32 @@ $ ls file_???.log # doesn't match any file, globbing failed
 ls: cannot access 'file_???.log': No such file or directory
 ```
 
-This is the corner case, which deserves a special attention:
+The metacharacter ```?``` can be readily combined with other metacharacters. For instance, regex ```[xy]?``` will match the case when "x" or "y" are optional, i.e. they must appear zero times or only once either of them:
+
+```bash
+$ egrep "a[xy]?b" <<< "abc" # matches, because "ab" (neither "x" or "y" appear) matches "abc" 
+abc
+$ egrep "a[xy]?b" <<< "axb" # matches, because "axb" (one occurence of "x") matches "axb"
+axb
+$ egrep "a[xy]?b" <<< "ayb" # matches, because "ayb" (one occurence of "y") matches "ayb"
+ayb
+$ egrep "a[xy]?b" <<< "axxb" # doesn't match, because none of "ab", "axb", "ayb" match "axxb"
+$ egrep "a[xy]?b" <<< "axyb" # doesn't match, because none of "ab", "axb", "ayb" match "axyb"
+$ egrep "a[xy]?" <<< "axxb" # matches, because both "a" and "ax" match "axxb"
+axxb
+$ egrep "a[xy]?" <<< "ax" # matches, because both "a" and "ax" match "ax"
+ax
+$ egrep "a[xy]?" <<< "a" # matches, because "a" matches "a"
+a
+$ egrep "a[xy]?" <<< "x" # doesn't match, because none of "a", "ax", "ay" match "x"
+```
+
+In the same spirit, regex `80[234]?86` would match 80286, 80386, 80486, but also 8086. 
+
+Finally, there is the corner case, i.e. when ```?``` appears as the first character of an entire ERE or after an initial `^` in ERE, which leads according to the POSIX standard for ERE to undefined results:
 
 ```bash
 $ egrep "?exam" <<< exam # undefined behaviour, here it matches, but this is not guaranteed
-exam
-$ egrep "Y?exam" <<< exam # matches, because there are zero or one occurrences of "Y" in "exam"
 exam
 $ egrep "^?exam" <<< exam # undefined behaviour, here it matches, but this is not guaranteed 
 exam
@@ -458,30 +482,7 @@ exam
 
 
 
-TBC combination with other regexes
-
-
-
-TBI 20240729 I do not understand this:
-
-$ egrep "Y?exam" <<< YYYexam # matches
-YYYexam
-
-egrep "aY?exam" <<< YYYexam # doesn't match
-
-
-
-[xy]?
-
-matches if: x and y do not appear. x or y appear.
-
-doesn't match of: both x and y appear. x or y appear 2 or more times.
-
-
-
-- `80[234]?86` would match 80286, 80386, 80486, but also 8086,
-
-
+TBC 20240730
 
 
 
