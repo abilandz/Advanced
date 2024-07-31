@@ -3,7 +3,7 @@
 
 # Regular expressions
 
-**Last update**: 20240730
+**Last update**: 20240731
 
 
 ### Table of Contents
@@ -429,6 +429,8 @@ $ egrep "ab?c" <<< "acc" # matches, because "ac" (zero occurences of "b") matche
 acc
 ```
 
+From the above example, one can easily deduce the simple technique how to interpret this metacharacter in ERE in practice: since ```?``` matches zero or one occurrences, it is feasible to expand regex containing ```?``` into one or two literal strings it has to match. For instance, regex ```ab?c``` expands into two literal strings, namely "ac" or "abc", that this regex has to match.
+
 In BRE, the question mark ```?``` is not a metacharacter:
 
 ```bash
@@ -471,37 +473,73 @@ $ egrep "a[xy]?" <<< "x" # doesn't match, because none of "a", "ax", "ay" match 
 
 In the same spirit, regex `80[234]?86` would match 80286, 80386, 80486, but also 8086. 
 
-Finally, there is the corner case, i.e. when ```?``` appears as the first character of an entire ERE or after an initial `^` in ERE, which leads according to the POSIX standard for ERE to undefined results:
+Finally, there is a corner case, i.e. when ```?``` appears as the first character of an entire ERE or after an initial `^` in ERE, which leads, according to the POSIX standard for ERE, to undefined results:
 
 ```bash
-$ egrep "?exam" <<< exam # undefined behaviour, here it matches, but this is not guaranteed
+$ egrep "?exam" <<< exam # undefined behaviour, here it matches, but this is not guaranteed to work
 exam
-$ egrep "^?exam" <<< exam # undefined behaviour, here it matches, but this is not guaranteed 
+$ egrep "^?exam" <<< exam # undefined behaviour, here it matches, but this is not guaranteed to work 
 exam
 ```
 
 
-
-TBC 20240730
 
 
 
 #### Plus ```+``` <a name="plus"></a>
 
-o the preceding character can appear one or more times but must be present at least once
+The metacharacter ```+``` has a special meaning only in ERE, while in BRE and globbing it is only a literal character. In ERE, its meaning can be summarized as follows: the preceding character or regex can appear one or more times but must be present at least once. Therefore, ```+``` makes the occurrence of preceeding character or regex mandatory. By itself, the plus ```+``` matches nothing, it only has an effect on what appears before it. 
+
+Similarly and for the ```?``` metacharacter described above, one can easily deduce the simple technique how to interpret this metacharacter in ERE in practice: since ```+``` matches at least one occurrence, one expands regex containing ```+``` into one or more occurrences of preceeding character or regex it has to match. For instance, regex ```ab+c``` expands into strings "abc", "abbc", "abbbc", ...,  that this regex has to match. This is illustrated with a few examples:
 
 ```bash
-$ echo "ac" | egrep "ab+c"
-$ echo "abc" | egrep "ab+c"
+$ egrep "ab+c" <<< "ac" # doesn't match, because "abc", "abbc", ..., doesn't match "ac"
+$ egrep "ab+c" <<< "abc" # matches, because "abc" matches "abc"
 abc
-$ echo "abbc" | egrep "ab+c"
+$ egrep "ab+c" <<< "abbc" # matches, because "abbc" matches "abbc"
 abbc
+$ egrep "ab+c" <<< "abb" # doesn't match, because "abc", "abbc", ..., doesn't match "abb"
 ```
-o can be used also in combination with character classes [...]
+This metachatacter is frequently used to search for extra spacing in the text between the words, and we illustrate the comparison with asterisk ```*``` used in ERE in the same context:
 
-`+` — matches one or more occurrences of the preceeding regex (”at least one”)
+- ```   +``` (exactly two spaces followed by "+") &mdash; matches all cases when between two words there are two or more space
 
-- ```   + ``` or  ```   * ``` — matches one or more spaces TBI check this
+- ```   *``` (exactly two spaces followed by "*") &mdash; matches all cases when between two words there is one or more spaces
+
+The metacharacter ```+``` can be combined with other metacharacters, to make a more sophisticated regex. For instance, regex ```[xy]+``` will match the case when "x" and/or "y" appear at least once, in any order: TBI 20240731 check the last statement
+
+```bash
+$ egrep "a[xy]+b" <<< "abc" # doesn't match, because none of "axb", "ayb", "axxb", "ayyb", ..., matches "abc" 
+$ egrep "a[xy]+b" <<< "axb" # matches, because "axb" (one occurence of "x") matches "axb"
+axb
+$ egrep "a[xy]+b" <<< "ayb" # matches, because "ayb" (one occurence of "y") matches "ayb"
+ayb
+$ egrep "a[xy]+b" <<< "axxb" # matches, because "axxb" (more than one occurence of "x") matches "axxb"
+axxb
+$ egrep "a[xy]+b" <<< "axyb" # matches, because "axyb" matches "axyb"
+axyb
+$ egrep "a[xy]+b" <<< "ayxb" # matches, because "ayxb" matches "ayxb"
+aybb
+$ egrep "a[xy]+b" <<< "axxyb" # matches, TBI finalize explanation
+axxyb
+$ egrep "a[xy]+b" <<< "axyxyb" # matches, TBI finalize explanation
+axyxyb
+$ egrep "a[xy]+" <<< "axxb" # matches, because both "ax" and "axx" matches "axxb"
+axxb
+$ egrep "a[xy]+" <<< "ax" # matches, because "ax" matches "ax"
+ax
+$ egrep "a[xy]+" <<< "a" # doesn't match, because none of "ax", "ay", "axx", "ayy", ..., matches "a"
+a
+$ egrep "a[xy]+" <<< "x" # doesn't match, because none of "ax", "ay", "axx", "ayy", ..., matches "x"
+```
+
+
+
+
+
+TBC 20240831
+
+
 
 
 
