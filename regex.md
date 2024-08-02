@@ -3,7 +3,7 @@
 
 # Regular expressions
 
-**Last update**: 20240731
+**Last update**: 20240802
 
 
 ### Table of Contents
@@ -473,7 +473,7 @@ $ egrep "a[xy]?" <<< "x" # doesn't match, because none of "a", "ax", "ay" match 
 
 In the same spirit, regex `80[234]?86` would match 80286, 80386, 80486, but also 8086. 
 
-Finally, there is a corner case, i.e. when ```?``` appears as the first character of an entire ERE or after an initial `^` in ERE, which leads, according to the POSIX standard for ERE, to undefined results:
+Finally, there is a corner case, i.e. when ```?``` appears as the first character of an entire ERE or after an initial `^` in ERE, which leads, according to the POSIX standard for ERE, to undefined results: TBI 20240802 check again POSIX statements, there seems to be additional undefined cases
 
 ```bash
 $ egrep "?exam" <<< exam # undefined behaviour, here it matches, but this is not guaranteed to work
@@ -488,9 +488,9 @@ exam
 
 #### Plus ```+``` <a name="plus"></a>
 
-The metacharacter ```+``` has a special meaning only in ERE, while in BRE and globbing it is only a literal character. In ERE, its meaning can be summarized as follows: the preceding character or regex can appear one or more times but must be present at least once. Therefore, ```+``` makes the occurrence of preceeding character or regex mandatory. By itself, the plus ```+``` matches nothing, it only has an effect on what appears before it. 
+The metacharacter ```+``` has a special meaning only in ERE, while in BRE and globbing it is only a literal character. In ERE, its meaning can be summarized as follows: the preceding character or regex can appear one or more times but must be present at least once. Therefore, ```+``` makes the occurrence of preceeding character or regex mandatory, but it doesn't restrict how many times it appears. By itself, the plus ```+``` matches nothing, it only has an effect on what appears before it. 
 
-Similarly and for the ```?``` metacharacter described above, one can easily deduce the simple technique how to interpret this metacharacter in ERE in practice: since ```+``` matches at least one occurrence, one expands regex containing ```+``` into one or more occurrences of preceeding character or regex it has to match. For instance, regex ```ab+c``` expands into strings "abc", "abbc", "abbbc", ...,  that this regex has to match. This is illustrated with a few examples:
+Similarly like for the ```?``` metacharacter described previously, one can easily deduce the simple technique how to interpret this metacharacter in ERE in practice: since ```+``` matches at least one occurrence, one expands regex containing ```+``` into one or more occurrences of preceeding character or regex it has to match. For instance, regex ```ab+c``` expands into strings "abc", "abbc", "abbbc", ...,  and this set of string is the set this regex has to match. This is illustrated with a few examples:
 
 ```bash
 $ egrep "ab+c" <<< "ac" # doesn't match, because "abc", "abbc", ..., doesn't match "ac"
@@ -506,10 +506,10 @@ This metachatacter is frequently used to search for extra spacing in the text be
 
 - ```   *``` (exactly two spaces followed by "*") &mdash; matches all cases when between two words there is one or more spaces
 
-The metacharacter ```+``` can be combined with other metacharacters, to make a more sophisticated regex. For instance, regex ```[xy]+``` will match the case when "x" and/or "y" appear at least once, in any order: TBI 20240731 check the last statement
+The metacharacter ```+``` can be combined with other metacharacters, to make a more sophisticated regex. For instance, regex ```[xy]+``` will match the case when "x" and/or "y" appear at least once, in any order:
 
 ```bash
-$ egrep "a[xy]+b" <<< "abc" # doesn't match, because none of "axb", "ayb", "axxb", "ayyb", ..., matches "abc" 
+$ egrep "a[xy]+b" <<< "abc" # doesn't match, because none of "axb", "ayb", "axxb", "ayyb", "axyb", "ayxb", ..., matches "abc" 
 $ egrep "a[xy]+b" <<< "axb" # matches, because "axb" (one occurence of "x") matches "axb"
 axb
 $ egrep "a[xy]+b" <<< "ayb" # matches, because "ayb" (one occurence of "y") matches "ayb"
@@ -520,24 +520,34 @@ $ egrep "a[xy]+b" <<< "axyb" # matches, because "axyb" matches "axyb"
 axyb
 $ egrep "a[xy]+b" <<< "ayxb" # matches, because "ayxb" matches "ayxb"
 aybb
-$ egrep "a[xy]+b" <<< "axxyb" # matches, TBI finalize explanation
+$ egrep "a[xy]+b" <<< "axxyb" # matches, because "axxyb" matches "axxyb"
 axxyb
-$ egrep "a[xy]+b" <<< "axyxyb" # matches, TBI finalize explanation
+$ egrep "a[xy]+b" <<< "axyxyb" # matches, because "axyxyb" matches "axyxyb"
 axyxyb
 $ egrep "a[xy]+" <<< "axxb" # matches, because both "ax" and "axx" matches "axxb"
 axxb
 $ egrep "a[xy]+" <<< "ax" # matches, because "ax" matches "ax"
 ax
 $ egrep "a[xy]+" <<< "a" # doesn't match, because none of "ax", "ay", "axx", "ayy", ..., matches "a"
-a
 $ egrep "a[xy]+" <<< "x" # doesn't match, because none of "ax", "ay", "axx", "ayy", ..., matches "x"
 ```
 
 
 
+TBI 20240802 check again the corner cases, i.e. this paragraph from POSIX, and unify it with other metacharacters mentioned here:
+
+```
+*+?{
+```
+
+The <asterisk>, <plus-sign>, <question-mark>, and <left-brace> shall be special except when used in a bracket expression (see [RE Bracket Expression](https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html#tag_09_03_05)). Any of the following uses produce undefined results:
+
+- If these characters appear first in an ERE, or immediately following an unescaped <vertical-line>, <circumflex>, <dollar-sign>, or <left-parenthesis>
+- If a <left-brace> is not part of a valid interval expression (see [EREs Matching Multiple Characters](https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html#tag_09_04_06))
 
 
-TBC 20240831
+
+TBI 20240802 clarify with example why ```+``` has no meaning by itself
 
 
 
@@ -545,32 +555,43 @@ TBC 20240831
 
 #### Repetition operator ```\{ ... \}``` and  ```{ ... }``` <a name="repetition"></a>
 
-The notation supported in ERE is ```{ ... }```, while notation ```\{ ... \}```  is used in BRE. For simplicity of notation, here only examples using ERE will be demonstrated, but they remain valid also in BRE, just each curly brace has to be escaped with backslah ```\```. 
+Curly braces ```{ ... }``` can take multiple meanings, depending on the context in which they are used:
 
-Regex ```{n,m}``` matches a range of occurrences of single character that immediately preceeds it (even if that character is regex itself), from ```n``` times to ```m``` times (lower and upper boundaries included).
-
-o specify a limit on repeatable regex - interval
-
-o two formats for the interval (```n``` and ```m``` are integers between 0 and 255 TBI check these boundaries):
-
-1. ```{m}``` - regex appears exactly m times
-2. ```{m,}``` - regex appears at least m times
-3. ```{,n}``` - regex appears at maximum n times
-4. ```{m,n}``` - regex appears at least m times, at maximum n times
+- _repetition operator_ &mdash; The notation supported in ERE is ```{ ... }```, while notation ```\{ ... \}```  is used in BRE. For simplicity of notation, here only examples using ERE will be demonstrated, but they remain valid also in BRE, just each curly brace has to be escaped with backslah ```\```. 
+- _wildcard_ &mdash; TBI 202400802 finalize description
+- _brace expansion_ &mdash; Mechanism by which shell generates arbitrary strings. Not all shells support this feature, and the ones which do, can use different internal syntax (see examples below)
 
 
 
-Examples (using ERE, therefore ```egrep``` below instead of ```grep```):
+Regex ```{n,m}``` in ERE, or ```\{n,m\}``` in BRE, matches a range of occurrences of single character that immediately precedes it (even if that character is regex itself), from ```n``` times to ```m``` times (lower and upper boundaries included). In essence, it specifies a limit on how many times the preceding character or regex has to appear. Four distinct formats for the interval are supported:
+
+1. ```{m}``` &mdash; exactly "m" times
+2. ```{m,}``` &mdash; at least "m" times
+3. ```{,n}``` &mdash; at maximum "n" times
+4. ```{m,n}``` &mdash; at least "m" times, at maximum "n" times
+
+In the above expressions, "n" and "m" are integers between 0 and 255. Its usage is illustrated with a few examples in ERE using  ```egrep```. All examples below can be cast into BRE and test with ```grep``` simply replacing notation ```{ ... }``` with ```\{ ... \}```.
 
 ```bash
-$ echo "abc" | egrep "ab{2}c" # doesnt' match, only one occurence of preceeding character "b"
-$ echo "abbc" | egrep "ab{2}c" # matches, two occurences of preceeding character "b"
+$ egrep "ab{2}c" <<< "abc" # doesnt' match, only one occurence of preceeding character "b"
+$ egrep "ab{2}c" <<< "abbc" # matches, exactly two occurences of preceeding character "b"
 abbc
-$ echo "abbbc" | egrep "ab{2}c" # doesn't match, more than two occurence of preceeding character "b"
-$ echo "abbbc" | egrep "ab{2,}c" # matches, at least two occurences
+$ egrep "ab{2}c" <<< "abbbc" # doesn't match, not exactly two occurence of preceeding character "b"
+$ egrep "ab{2,}c" <<< "abbbc" # matches, at least two occurences of preceeding character "b"
 abbbc
-$ echo "abbbbc" | egrep "ab{2,3}c" # doesn't match
+$ egrep "ab{,2}c" <<< "abbbc" # doesn't match, more than two occurence of preceeding character "b"
+$ egrep "ab{2,4}c" <<< "abbbbbc" # doesn't match, neither two, three or four occurences of preceeding character "b"
 ```
+
+
+
+
+
+TBC 20240802
+
+
+
+
 
 Example: `10{2,4}1` matches 1001, 10001, 100001, but not 101 and 1000001   TBI check and re-format
 
