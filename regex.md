@@ -3,7 +3,7 @@
 
 # Regular expressions
 
-**Last update**: 20240802
+**Last update**: 20240803
 
 
 ### Table of Contents
@@ -202,7 +202,7 @@ A       BB
 
 __Example 6__: In this example we demonstrate that the asterisk ```*``` by itself matches nothing:
 ```bash
-$ grep *exam <<< exam # doesn't match, because there is no preceeding character
+$ grep *exam <<< exam # doesn't match, because there is no preceding character
 $ grep Y*exam <<< exam # matches, because there are zero or more occurrences of "Y" in "exam"
 exam
 $ grep "^*exam" <<< exam # doesn't match, this combination "^*" is the corner case, see above 
@@ -555,91 +555,67 @@ TBI 20240802 clarify with example why ```+``` has no meaning by itself
 
 #### Repetition operator ```\{ ... \}``` and  ```{ ... }``` <a name="repetition"></a>
 
-Curly braces ```{ ... }``` can take multiple meanings, depending on the context in which they are used:
+When used as metacharacters, curly braces (or brackets) ```{ ... }``` can take multiple meanings, depending on the context in which they are used. The following summary indicates their three most important use cases: 
 
-- _repetition operator_ &mdash; The notation supported in ERE is ```{ ... }```, while notation ```\{ ... \}```  is used in BRE. For simplicity of notation, here only examples using ERE will be demonstrated, but they remain valid also in BRE, just each curly brace has to be escaped with backslah ```\```. 
-- _wildcard_ &mdash; TBI 202400802 finalize description
-- _brace expansion_ &mdash; Mechanism by which shell generates arbitrary strings. Not all shells support this feature, and the ones which do, can use different internal syntax (see examples below)
+- _repetition operator_ &mdash; The notation supported in ERE is ```{ ... }```, while notation ```\{ ... \}```  is used in BRE. For simplicity of notation, in this section only examples using ERE will be demonstrated, but all examples remain valid also in BRE, only each curly brace has to be escaped with backslash ```\```.
+- _shell wildcard_ &mdash; TBI 202400802 finalize description
+- _brace expansion_ &mdash; Mechanism by which shell generates arbitrary strings. Not all shells support this feature, and the ones which do, can use different internal syntax (see examples below).
 
 
 
-Regex ```{n,m}``` in ERE, or ```\{n,m\}``` in BRE, matches a range of occurrences of single character that immediately precedes it (even if that character is regex itself), from ```n``` times to ```m``` times (lower and upper boundaries included). In essence, it specifies a limit on how many times the preceding character or regex has to appear. Four distinct formats for the interval are supported:
+Regex ```{n,m}``` in ERE, or ```\{n,m\}``` in BRE, matches a range of occurrences of single character or regex that immediately precedes it, from ```n``` times to ```m``` times (lower and upper boundaries included). In essence, it specifies a limit on how many times the preceding character or regex has to appear. Four distinct formats for the interval are supported:
 
 1. ```{m}``` &mdash; exactly "m" times
 2. ```{m,}``` &mdash; at least "m" times
 3. ```{,n}``` &mdash; at maximum "n" times
-4. ```{m,n}``` &mdash; at least "m" times, at maximum "n" times
+4. ```{m,n}``` &mdash; at least "m" times and at maximum "n" times
 
-In the above expressions, "n" and "m" are integers between 0 and 255. Its usage is illustrated with a few examples in ERE using  ```egrep```. All examples below can be cast into BRE and test with ```grep``` simply replacing notation ```{ ... }``` with ```\{ ... \}```.
+Its usage is illustrated with a few examples in ERE using ```egrep```. All examples below can be cast into BRE and test with ```grep``` simply replacing notation ```{ ... }``` with ```\{ ... \}```.
 
 ```bash
-$ egrep "ab{2}c" <<< "abc" # doesnt' match, only one occurence of preceeding character "b"
-$ egrep "ab{2}c" <<< "abbc" # matches, exactly two occurences of preceeding character "b"
+# Example usage of { } in ERE:
+$ egrep "ab{2}c" <<< "abc" # doesnt' match, only one occurence of preceding character "b"
+$ egrep "ab{2}c" <<< "abbc" # matches, exactly two occurences of preceding character "b"
 abbc
-$ egrep "ab{2}c" <<< "abbbc" # doesn't match, not exactly two occurence of preceeding character "b"
-$ egrep "ab{2,}c" <<< "abbbc" # matches, at least two occurences of preceeding character "b"
+$ egrep "ab{2}c" <<< "abbbc" # doesn't match, not exactly two occurences of preceding character "b"
+$ egrep "ab{2,}c" <<< "abbbc" # matches, at least two occurences of preceding character "b"
 abbbc
-$ egrep "ab{,2}c" <<< "abbbc" # doesn't match, more than two occurence of preceeding character "b"
-$ egrep "ab{2,4}c" <<< "abbbbbc" # doesn't match, neither two, three or four occurences of preceeding character "b"
+$ egrep "ab{,2}c" <<< "abbbc" # doesn't match, more than two occurence of preceding character "b"
+$ egrep "ab{2,4}c" <<< "abbbbbc" # doesn't match, neither two, three or four occurences of preceding character "b"
+```
+
+In the same spirit, curly braces in ERE can act on the preceding regex. For instance, the regex `[0-9]{3}` is the same as `[0-9][0-9][0-9]` :
+
+```bash 
+$ egrep "[0-9]{3}" <<< "24" # doesn't match
+$ egrep "[0-9]{3}" <<< "245" # matches, TBI 20240803 finalize explanation
+245
+$ egrep "[0-9]{3}" <<< "2458" # matches, TBI 20240803 finalize explanation
+2458
+```
+
+One can think of some previously covered single metacharacters in ERE to be shortcuts for lengthier metacharacters using specific curly braces. For instance:
+
+- ``` ?``` is a shortcut for ```{0,1}``` 
+
+- ```+``` is a shortcut for ```{1,}``` 
+
+- ```*``` is a shortcut for ```{0,}``` 
+
+
+```bash
+$ egrep "a?" <<< "abc"
+abc
+$ egrep "a{0,1}" <<< "abc"
+abc
+TBI 20240803 do I need more examples here?
 ```
 
 
 
+TBC 20240803 what do I do with these examples?
 
-
-TBC 20240802
-
-
-
-
-
-Example: `10{2,4}1` matches 1001, 10001, 100001, but not 101 and 1000001   TBI check and re-format
-
-- Example: `[0-9]{3}` is the same as `[0-9][0-9][0-9]`    TBI check and re-format
-
-
-
-o can be used also in combination with character classes [...]
-
-o gawk supports this regex only if flag --re-interval is used
-
-
-
-Shell wildcard -- TBI see https://tldp.org/LDP/GNU-Linux-Tools-Summary/html/x11655.htm:
-
-{ } (curly brackets)
-
-terms are separated by commas and each term must be the name of something or a wildcard. This wildcard will copy anything that matches either wildcard(s), or exact name(s) (an “or” relationship, one or the other).
-
-For example, this would be valid:
-
-```
-cp {*.doc,*.pdf} ~
-```
-
-
-
-This will copy anything ending with .doc or .pdf to the users home directory. Note that spaces are not allowed after the commas (or anywhere else).
-
-The repetion operator in regex, is not to be confused with brace expansio, TBI finalize and add few examples
-
-
-
-o has no meaning by itself
-
-o example:
-
-^G[o]{2,}gle
-
-" matches Google, Gooogle, etc.
-
-? => find 0 or 1 <=> so ? is a shortcut for {0,1}  **BEAUTIFUL**
-
-- => find 1 or more <=> so + is a shortcut for {1,}  **BEAUTIFUL  AB**
-
-- => find 0 or more <=> so * is a shortcut for {0,}    **BEAUTIFUL AB**
-
-o examples:
+```bash
 
 grep -E '^G[o]?gle' <<< "Ggle"
 
@@ -684,14 +660,60 @@ Google
 grep -E '^G[o]+gle' <<< "Gooogle"
 
 Gooogle
+```
 
-o for a single character like above, [o] can be replaced with o **TBI AB check further**
 
-o for a compound expressions, use ( ) (can be nested, like braces in math!), and then { }
 
-$ grep -E '(\b(an|the)\ ){2,}' <<< "an an the the"
 
-an an the the
+
+
+
+When used as a shell wildcard in globbing, curly braces must satisfy the following generic syntax: ```{term-1,term-2,...,term-N}```. Each of the terms separated by commas can contain another shell wildcards (e.g. asterisk ```*```). However, spaces are not allowed anywhere within curly braces. 
+
+TBI 20240803 I need to clarify the difference between ```ls *.pdf *.png``` and ```ls {*.pdf,*.png}```, if any.  
+
+```bash
+# Example usage of { } as shell wildcard:
+$ touch a.pdf b.pdf c.pdf a.eps b.eps c.eps a.png b.png c.png 
+$ ls {*.pdf,*.png}
+a.pdf  a.png  b.pdf  b.png  c.pdf  c.png
+$ ls {*.pdf,*.png,*.eps}
+a.eps  a.pdf  a.png  b.eps  b.pdf  b.png  c.eps  c.pdf  c.png
+$ ls {*.pdf,*.png, *.eps} # WRONG!! There is an an extra space within {}
+ls: cannot access '{*.pdf,*.png,': No such file or directory
+ls: cannot access '*.eps}': No such file or directory
+```
+
+
+
+Finally, curly braces can be used in another context, to generate with shell arbitrary strings via brace expansion. Syntax for brace expansion differs from one shell to another. 
+
+TBI 20240802 I have already covered brace expansion in PH8124, do I repeat that here?
+
+TBI 20240802 check this statement on the syntaxt, I see that bash and zsh indeed can behave differently:
+
+```bash
+$ echo {0..9..2}
+0 2 4 6 8
+
+% echo {0..9..2}
+0 2 4 6 8
+
+# However:
+$ echo {0..9..-2}
+0 2 4 6 8
+
+% echo {0..9..-2} 
+8 6 4 2 0
+```
+
+
+
+
+
+o gawk supports this regex only if flag --re-interval is used
+
+o has no meaning by itself
 
 
 
@@ -724,7 +746,7 @@ o not to be confused with pipe symbol TBI finalize + see if I can come with the 
 
 
 
-`|` — alternation. Either a preceeding or following regex can be matched
+`|` — alternation. Either a preceding or following regex can be matched
 
 - specifies union of regular expressions
 
@@ -778,6 +800,16 @@ Sat
 $ echo "Saturday" | egrep "Sat(urday)?"
 Saturday
 ```
+
+
+
+o for a compound expressions, use ( ) (can be nested, like braces in math!), and then { }
+
+$ grep -E '(\b(an|the)\ ){2,}' <<< "an an the the"
+
+an an the the
+
+
 
 
 
