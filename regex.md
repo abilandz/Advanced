@@ -3,7 +3,7 @@
 
 # Regular expressions
 
-**Last update**: 20240803
+**Last update**: 20240804
 
 
 ### Table of Contents
@@ -555,11 +555,11 @@ TBI 20240802 clarify with example why ```+``` has no meaning by itself
 
 #### Repetition operator ```\{ ... \}``` and  ```{ ... }``` <a name="repetition"></a>
 
-When used as metacharacters, curly braces (or brackets) ```{ ... }``` can take multiple meanings, depending on the context in which they are used. The following summary indicates their three most important use cases: 
+When used as metacharacters, curly braces (or brackets) ```{ ... }``` can take multiple meanings, depending on the context in which they are used. The following summary indicates their most important use cases: 
 
-- _repetition operator_ &mdash; The notation supported in ERE is ```{ ... }```, while notation ```\{ ... \}```  is used in BRE. For simplicity of notation, in this section only examples using ERE will be demonstrated, but all examples remain valid also in BRE, only each curly brace has to be escaped with backslash ```\```.
-- _shell wildcard_ &mdash; TBI 202400802 finalize description
+- _repetition operator_ &mdash; The notation supported in ERE is ```{ ... }```, while notation ```\{ ... \}```  is used in BRE to achieve the same functionality. For simplicity of notation, in this section only examples using ERE will be demonstrated, but all examples remain valid also for BRE, only each curly brace has to be escaped with backslash ```\```.
 - _brace expansion_ &mdash; Mechanism by which shell generates arbitrary strings. Not all shells support this feature, and the ones which do, can use different internal syntax (see examples below).
+- _shell wildcard_ &mdash; Similar to _brace expansion_, with the only difference that strings generated are filenames, which must exist.
 
 
 
@@ -587,20 +587,24 @@ $ egrep "ab{2,4}c" <<< "abbbbbc" # doesn't match, neither two, three or four occ
 In the same spirit, curly braces in ERE can act on the preceding regex. For instance, the regex `[0-9]{3}` is the same as `[0-9][0-9][0-9]` :
 
 ```bash 
-$ egrep "[0-9]{3}" <<< "24" # doesn't match
-$ egrep "[0-9]{3}" <<< "245" # matches, TBI 20240803 finalize explanation
+$ egrep "[0-9]{3}" <<< "24" # doesn't match, only two occurences of any digits from the set 0,1,...,9 
+$ egrep "[0-9]{3}" <<< "245" # matches, exactly three occurences of any digits from the set 0,1,...,9
 245
-$ egrep "[0-9]{3}" <<< "2458" # matches, TBI 20240803 finalize explanation
+$ egrep "^[0-9]{3}" <<< "2458" # matches, because "245" matches the begining of "2458"
 2458
+$ egrep "[0-9]{3}$" <<< "2458" # matches, because "458" matches the end of "2458"
+2458
+$ egrep "^[0-9]{3}$" <<< "2458" # doesn't match, same 3-character string has to match "2458" from beginning end, which is impossible TBI 20240804 refine explanation
+$ egrep "^[0-9]{3}$" <<< "2222" # doesn't match, same 3-character string has to match "2458" from beginning end, which is impossible TBI 20240804 refine explanation
 ```
 
-One can think of some previously covered single metacharacters in ERE to be shortcuts for lengthier metacharacters using specific curly braces. For instance:
+It is very instructive to establish the relation between ```{ ... }``` when used as a repetition operator in ERE, and some previously covered metacharacters. In particular, the following relations hold in ERE:
 
 - ``` ?``` is a shortcut for ```{0,1}``` 
-
 - ```+``` is a shortcut for ```{1,}``` 
-
 - ```*``` is a shortcut for ```{0,}``` 
+
+For instance:
 
 
 ```bash
@@ -608,169 +612,65 @@ $ egrep "a?" <<< "abc"
 abc
 $ egrep "a{0,1}" <<< "abc"
 abc
-TBI 20240803 do I need more examples here?
 ```
 
 
 
-TBC 20240803 what do I do with these examples?
-
-```bash
-
-grep -E '^G[o]?gle' <<< "Ggle"
-
-Ggle
-
-grep -E '^G[o]?gle' <<< "Gogle"
-
-Gogle
-
-grep -E '^G[o]?gle' <<< "Google"
-
-nothing
-
-grep -E '^G[o]*gle' <<< "Ggle"
-
-Ggle
-
-grep -E '^G[o]*gle' <<< "Gogle"
-
-Gogle
-
-grep -E '^G[o]*gle' <<< "Google"
-
-Google
-
-grep -E '^G[o]*gle' <<< "Gooogle"
-
-Gooogle
-
-grep -E '^G[o]+gle' <<< "Ggle"
-
-nothing
-
-grep -E '^G[o]+gle' <<< "Gogle"
-
-Gogle
-
-grep -E '^G[o]+gle' <<< "Google"
-
-Google
-
-grep -E '^G[o]+gle' <<< "Gooogle"
-
-Gooogle
-```
+Curly braces can be used in another context, to generate with shell arbitrary strings via the _brace expansion_ mechanism. If the generated strings match the existing filenames, curly braces act as a _shell wildcard_ in this context. This particular use case of curly braces was covered in detailed in [Section 5 of PH8124](https://abilandz.github.io/PH8124/Lecture_5/Lecture_5.html#code_blocks_and_brace_expansion) course, and won't be repeated here.
 
 
 
-
-
-
-
-When used as a shell wildcard in globbing, curly braces must satisfy the following generic syntax: ```{term-1,term-2,...,term-N}```. Each of the terms separated by commas can contain another shell wildcards (e.g. asterisk ```*```). However, spaces are not allowed anywhere within curly braces. 
-
-TBI 20240803 I need to clarify the difference between ```ls *.pdf *.png``` and ```ls {*.pdf,*.png}```, if any.  
-
-```bash
-# Example usage of { } as shell wildcard:
-$ touch a.pdf b.pdf c.pdf a.eps b.eps c.eps a.png b.png c.png 
-$ ls {*.pdf,*.png}
-a.pdf  a.png  b.pdf  b.png  c.pdf  c.png
-$ ls {*.pdf,*.png,*.eps}
-a.eps  a.pdf  a.png  b.eps  b.pdf  b.png  c.eps  c.pdf  c.png
-$ ls {*.pdf,*.png, *.eps} # WRONG!! There is an an extra space within {}
-ls: cannot access '{*.pdf,*.png,': No such file or directory
-ls: cannot access '*.eps}': No such file or directory
-```
-
-
-
-Finally, curly braces can be used in another context, to generate with shell arbitrary strings via brace expansion. Syntax for brace expansion differs from one shell to another. 
-
-TBI 20240802 I have already covered brace expansion in PH8124, do I repeat that here?
-
-TBI 20240802 check this statement on the syntaxt, I see that bash and zsh indeed can behave differently:
-
-```bash
-$ echo {0..9..2}
-0 2 4 6 8
-
-% echo {0..9..2}
-0 2 4 6 8
-
-# However:
-$ echo {0..9..-2}
-0 2 4 6 8
-
-% echo {0..9..-2} 
-8 6 4 2 0
-```
-
-
-
-
-
-o gawk supports this regex only if flag --re-interval is used
-
-o has no meaning by itself
-
-
+TBI 20240802 clarify with example why curly brace has no meaning by itself
 
 
 
 #### Alternation operator ```|``` <a name="alternation"></a>
 
-Alternation operator ```|``` is supported in ERE and it stands for logical OR in regex. Schematically, it is used as follows
+Alternation operator ```|``` is supported and standardized only in ERE where it stands for logical ```OR``` in regex. It does not have any special meaning as a shell wildcard, because this character is already reserved to denote the important pipe mechanism in shell. Some commands, e.g. **grep** and **sed**, supports its usage also in BRE, but it has to be escaped ```\|```. Since the usage of alternation operator ```|``` in BRE is not standardized, it is not covered here in detail.
+
+Schematically, the alternation operator ```|``` is used in ERE as follows:
 
 ```bash
 regex-1|regex-2|...
 ```
 
+The above syntax indicates that any of the specified regular expressions, "regex-1", "regex-2", ..., can be matched. 
+
 For instance:
+
+```bash
+# Usage of "|" in ERE:
+$ egrep "cat|dog" <<< "cat sleeps"
+cat sleeps
+$ egrep "cat|dog" <<< "dog sleeps"
+dog sleeps
+
+# Usage of "|" in BRE (not standardized!):
+$ grep "cat|dog" <<< "cat sleeps" # WRONG!!
+$ grep "cat\|dog" <<< "cat sleeps"
+cat sleeps
+$ grep "cat\|dog" <<< "dog sleeps"
+dog sleeps
+```
+
+Similarly, the regex ```UNIX|LINUX|BSD``` will match all lines which contain either string "UNIX" or "LINUX" or "BSD".
+
+
+
+TBC 20240804 usage in combination with other metacharacters
+
+
+
+The alternation operator ```|``` is not to be confused with the pipe symbol ```|```, but from the context there is no room for ambiguity. For instance, in the example below, the 1st metacharacter ```|``` is a shell pipe, the 2nd metacharacter ```|``` is alternation operator in ERE:
 
 ```bash
 $ echo "cat sleeps" | egrep "cat|dog"
 cat sleeps
-$ echo "dog sleeps" | egrep "cat|dog"
-dog sleeps
-
-# Note the difference with respect to default grep: | vs. \|
-$ echo "cat sleeps" | grep "cat|dog"
-$ echo "cat sleeps" | grep "cat\|dog"
-cat sleeps
 ```
 
 
-o not to be confused with pipe symbol TBI finalize + see if I can come with the better example, as above I do use | both for pipe and OR
 
 
-
-`|` — alternation. Either a preceding or following regex can be matched
-
-- specifies union of regular expressions
-
-- Example: 
-
-  ```
-  UNIX|LINUX|BSD
-  ```
-
-   — matches lines which contain either UNIX or LINUX or BSD
-
-  - Remember, this is not supported by sed
-
-
-
-yields a match if any of the patterns match
-
-grep -E '^(first|second|third)' someFile
-
-o this is the same thing:
-
-grep -E '^(bat|Cat)' someFile
-
-grep -E '^[bC]at' someFile
 
 
 
@@ -810,6 +710,16 @@ $ grep -E '(\b(an|the)\ ){2,}' <<< "an an the the"
 an an the the
 
 
+
+yields a match if any of the patterns match
+
+grep -E '^(first|second|third)' someFile
+
+o this is the same thing:
+
+grep -E '^(bat|Cat)' someFile
+
+grep -E '^[bC]at' someFile
 
 
 
@@ -953,6 +863,66 @@ fi
 
 
 
+
+
+TBC 20240803 what do I do with these examples?
+
+```bash
+grep -E '^G[o]?gle' <<< "Ggle"
+
+Ggle
+
+grep -E '^G[o]?gle' <<< "Gogle"
+
+Gogle
+
+grep -E '^G[o]?gle' <<< "Google"
+
+nothing
+
+grep -E '^G[o]*gle' <<< "Ggle"
+
+Ggle
+
+grep -E '^G[o]*gle' <<< "Gogle"
+
+Gogle
+
+grep -E '^G[o]*gle' <<< "Google"
+
+Google
+
+grep -E '^G[o]*gle' <<< "Gooogle"
+
+Gooogle
+
+grep -E '^G[o]+gle' <<< "Ggle"
+
+nothing
+
+grep -E '^G[o]+gle' <<< "Gogle"
+
+Gogle
+
+grep -E '^G[o]+gle' <<< "Google"
+
+Google
+
+grep -E '^G[o]+gle' <<< "Gooogle"
+
+Gooogle
+```
+
+
+
+
+
+
+
+
+
+
+
 ### 4. Further reading <a name="further.reading"></a>
 
 * _"Linux Command Line and Shell Scripting Bible"_, Richard Blum, Christine Bresnahan 
@@ -962,8 +932,8 @@ fi
 * _"UNIX A History and a Memoir"_, Brian Kernighan
   * Section 4.6: Regular expressions 
 * Linux manual page:
-   * [glob][https://man7.org/linux/man-pages/man7/glob.7.html] ( or execute locally: ```$ man 7 glob``` )
-   * [regex][https://man7.org/linux/man-pages/man7/regex.7.html] ( or execute locally: ```$ man 7 regex``` )
+   * [glob](https://man7.org/linux/man-pages/man7/glob.7.html) ( or execute locally: ```$ man 7 glob``` )
+   * [regex](https://man7.org/linux/man-pages/man7/regex.7.html) ( or execute locally: ```$ man 7 regex``` )
 * POSIX standard
-   * [Chapter 9: "Regular Expressions"][https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html]
+   * [Chapter 9: "Regular Expressions"](https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html)
 * Online regex checker: https://regex101.com/
