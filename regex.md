@@ -3,7 +3,7 @@
 
 # Regular expressions
 
-**Last update**: 20240804
+**Last update**: 20240809
 
 
 ### Table of Contents
@@ -131,9 +131,9 @@ In the end, we remark that unlike backslash ```\```, slash ```/``` is not a spec
 #### Dot ```.``` <a name="dot"></a>
 The metacharacter dot ```.``` has a special meaning only in BRE and ERE. The reason why it doesn't have any special meaning as a wildcard in globbing originates from the fact that ```.``` as a literal character is already used to denote _hidden files_ (the files whose names begin with ```.``` , like in ".bashrc", and which are not listed by default with the __ls__ command), and to separate a filename from file extension that identifies the file format (e.g. ".txt" in "someFile.txt" to identify the plain ASCII text file). 
 
-In regex the dot ```.``` will match any single character, except newline. The character must be present (zero occurrences do not count), and space also counts as a character. It can be thought of as a sort of "variable" in regex, in analogy with the case when a variable represents any value in an arithmetic expression. One can also say that dot ```.``` specifies a position that any character can fill. In globbing, the wildcard ```?``` has a similar meaning (see below).
+In BRE and ERE the dot ```.``` will match any single character, except newline. The character must be present (zero occurrences do not count), and space also counts as a character. It can be thought of as a sort of "variable" in regex, in analogy with the case when a variable represents any value in an arithmetic expression. One can also say that dot ```.``` specifies a position that any character can fill. In globbing, the wildcard ```?``` has a similar meaning (see below).
 
-Few simple examples when dot ```.``` is used as regex:
+Few simple examples when dot ```.``` is used in BRE and ERE:
 
 ```bash
 $ grep a.e <<< ace
@@ -187,7 +187,7 @@ __Example 3__: Regex ```A.*E``` matches AE, ACE, AIRPLANE, A LONG WAY HOME, etc.
 
 __Example 4__: Regex ```".*"``` will match any string within quotes. The span matched by it is always the longest possible.
 
-__Example 5__: Regex ```   *``` (three empty characters before ```*```) will match all lines in the text in which there are words separated by two or more empty characters, instead by default one empty character:
+__Example 5__: Regex ```   *``` (three empty characters before ```*```) will match all lines in the text in which there are words separated by two or more empty characters, instead by default with one empty character:
 
 ```bash
 $ cat someFile
@@ -230,7 +230,7 @@ grep '<.*>' someHtml
 
 Finally, we illustrate with a few separate examples the usage of metacharacter asterisk ```*``` as a wildcard in globbing, when it has a different meaning. When used as a wildcard, asterisk ```*``` stands for "zero or more occurrences of any characters". To clarify the difference, we state that wildcard ```*``` in globbing acts the same way as regex ```.*```  in BRE or ERE.
 
-__Example 5__: TBI some text
+__Example 9__: Usage of asterisk ```*``` in filename expansion.
 
 ```bash
 $ touch file.pdf file_{0..3}.pdf
@@ -246,7 +246,7 @@ file_0.pdf  file_1.pdf  file_2.pdf  file_3.pdf  file.pdf
 
 
 
-TBI 20240724 I still have to finalize the last part
+
 
 
 
@@ -293,13 +293,13 @@ Summary of further standard use cases of anchors:
 
 
 
-TBI 20240725 Write a bridge at the end
+
 
 
 
 #### Character classes ```[ ... ]``` <a name="character.classes"></a>
 
-Character classes ```[ ... ]``` (or sometimes being referred to as _bracket expression_) work the same way in globbing, BRE and ERE, and they provide a more specific variant of ```.``` metacharacter. Basically, ```.``` metacharacter would match any single character, while ```[ ... ]``` matches any single character enlisted between ```[``` and ``` ]```.
+Character classes ```[ ... ]``` (or sometimes being referred to as _bracket expression_) work the same way in globbing, BRE and ERE, and they provide a more specific variant of dot ```.``` metacharacter. Basically, ```.``` metacharacter would match any single character, while ```[ ... ]``` matches any single character enlisted between ```[``` and ``` ]```.
 
 ```bash
 $ echo abc | grep "a[bx]c"
@@ -336,9 +336,9 @@ SomeWord
 Usage of character classes ```[ ... ]``` in globbing is the same:
 ```bash
 $ ls
-someFile_1.txt	someFile_2.txt	someFile_3.txt	someFile_4.txt
+someFile_1.txt someFile_2.txt someFile_3.txt someFile_4.txt
 $ ls someFile_[23].txt
-someFile_2.txt	someFile_3.txt 
+someFile_2.txt someFile_3.txt 
 ```
 
 Inside ```[ ... ]``` the standard metacharacters loose their special meaning:
@@ -352,9 +352,9 @@ $ echo '.file' | grep '[.]file'
 However, the notation ```[ ... ]``` supports two of its own metacharacters: ```-``` and ```^```.  The symbol ```-``` is a metacharacter within ```[ ... ]``` only if it does not appear at the first or at the last position &mdash; at any other position it has a special meaning and it indicates the _range_ between two surrounding symbols.
 
 ```bash
-$ touch file_A.txt file_B.txt file_C.txt file_D.txt	file_E.txt 
+$ touch file_A.txt file_B.txt file_C.txt file_D.txt file_E.txt 
 $ ls file_[B-D]
-file_B.txt	file_C.txt 	file_D.txt 
+file_B.txt file_C.txt file_D.txt 
 ```
 
 __Example__: Write the regex which matches any of the 4 arithmetic operators: "+", "-", "*", and "\\". 
@@ -362,16 +362,12 @@ __Example__: Write the regex which matches any of the 4 arithmetic operators: "+
 - ```[-+*\]``` and ```[+*\-]``` are both correct. Within ```[ ... ]```, the symbol ```-``` at the very beginning or at the very end is not a metacharacter;
 - ```[+-*\]``` is wrong, because here the symbol ```-``` is in the middle, and is interpreted as a metacharacter which indicates range between symbols "+" and "*", which is ill-defined
 
-```bash
-TBI 20240726 Related to this example In awk, this is fine:  [+\-*\] ⇒ but who can read this now? TBI test this
-```
-
 Multiple ranges are also fine, e.g.
 
 ```bash
 $ touch file_A.txt file_B.txt file_C.txt file_D.txt file_1.txt file_2.txt file_3.txt file_4.txt
 $ ls file_[A-C2-4].txt
-file_2.txt  file_3.txt  file_4.txt  file_A.txt	file_B.txt	file_C.txt
+file_2.txt file_3.txt file_4.txt file_A.txt file_B.txt file_C.txt
 ```
 
 On the other hand, the symbol ```^``` (_circumflex_ or _caret_) is a metacharacter within ```[ ... ]``` only if it appears at the very first position &mdash; at any other position, including the last position, it doesn't have any special meaning. Therefore, the regex ```[^...]``` has the following special meaning: ```^``` in the first place excludes all following characters within ```[ ... ]``` from being matched. For instance:
@@ -379,7 +375,7 @@ On the other hand, the symbol ```^``` (_circumflex_ or _caret_) is a metacharact
 ```bash
 $ touch file_A.txt file_B.txt file_C.txt file_D.txt file_E.txt file_F.txt file_G.txt file_H.txt
 $ ls file_[^ACF].txt
-file_B.txt	file_D.txt 	file_E.txt 	file_G.txt 	file_H.txt 
+file_B.txt file_D.txt file_E.txt file_G.txt file_H.txt 
 ```
 
 Only in globbing, the synonym for regex ```[^...]``` is ```[!...]```. But because the notation ```[!...]``` does not have any special meaning in BRE or in ERE, and to avoid confusion, we recommend the usage only of regex ```[^...]``` in any context.
@@ -400,7 +396,7 @@ Character classes ```[ ... ]``` can be naturally combined with other metacharact
 
 In the above example, asterisk ```*``` had an effect only on a single preceding character "c". But we can make asterisk ```*``` acting directly on character classes ```[ ... ]``` , when the final result is different. In combination with character classes, ```*``` matches any number of characters in that class, but also in any order:
 
-- `[no]*` — matches "n", "nn", "nnn", "o", "oo", "ooo", "no", "nno", "noo", "on", "oon", "onn", etc. It will match also "abc" because that would correspond to "zero occurences either of "n" or "o". TBI 20240728 this is not really a usefuly regex . re-think if I nedd this example at all
+- `[no]*` — matches "n", "nn", "nnn", "o", "oo", "ooo", "no", "nno", "noo", "on", "oon", "onn", etc. It will match also "abc" because that would correspond to "zero occurences either of "n" or "o". TBI 20240728 this is not really a usefuly regex  - re-think if I need this example at all
 
 
 
@@ -444,9 +440,9 @@ In globbing, the question mark ```?``` stands for "any single character":
 ```bash
 $ touch file_0.log file_A.log file_10.log file_AB.log
 $ ls file_?.log
-file_0.log  file_A.log
+file_0.log file_A.log
 $ ls file_??.log
-file_10.log  file_AB.log
+file_10.log file_AB.log
 $ ls file_???.log # doesn't match any file, globbing failed
 ls: cannot access 'file_???.log': No such file or directory
 ```
@@ -584,7 +580,7 @@ $ egrep "ab{,2}c" <<< "abbbc" # doesn't match, more than two occurence of preced
 $ egrep "ab{2,4}c" <<< "abbbbbc" # doesn't match, neither two, three or four occurences of preceding character "b"
 ```
 
-In the same spirit, curly braces in ERE can act on the preceding regex. For instance, the regex `[0-9]{3}` is the same as `[0-9][0-9][0-9]` :
+In the same spirit, curly braces in ERE can act on the preceding regex. For instance, the regex `[0-9]{3}` is the same as `[0-9][0-9][0-9]`:
 
 ```bash 
 $ egrep "[0-9]{3}" <<< "24" # doesn't match, only two occurences of any digits from the set 0,1,...,9 
@@ -600,7 +596,7 @@ $ egrep "^[0-9]{3}$" <<< "2222" # doesn't match, same 3-character string has to 
 
 It is very instructive to establish the relation between ```{ ... }``` when used as a repetition operator in ERE, and some previously covered metacharacters. In particular, the following relations hold in ERE:
 
-- ``` ?``` is a shortcut for ```{0,1}``` 
+- ```?``` is a shortcut for ```{0,1}``` 
 - ```+``` is a shortcut for ```{1,}``` 
 - ```*``` is a shortcut for ```{0,}``` 
 
@@ -655,12 +651,6 @@ dog sleeps
 
 Similarly, the regex ```UNIX|LINUX|BSD``` will match all lines which contain either string "UNIX" or "LINUX" or "BSD".
 
-
-
-TBC 20240804 usage in combination with other metacharacters
-
-
-
 The alternation operator ```|``` is not to be confused with the pipe symbol ```|```, but from the context there is no room for ambiguity. For instance, in the example below, the 1st metacharacter ```|``` is a shell pipe, the 2nd metacharacter ```|``` is alternation operator in ERE:
 
 ```bash
@@ -670,20 +660,42 @@ cat sleeps
 
 
 
+TBI 20240804 usage in combination with other metacharacters
+
 
 
 
 
 #### Grouping operator ```( ... )``` <a name="grouping"></a>
 
-We have already seen that a value can be stored in a variable by explicit assignment (using the operator 
+Composite metacharacter ```( ... )```, named _grouping operator_, has a special meaning only in ERE. It's primary use case is to group regular expressions. For instance, regex ```compan(y|ies)``` will match both "company" and "companies", but also few other possibilities:
+
+```bash
+$ egrep "compan(y|ies)" <<< "company"
+company
+$ egrep "compan(y|ies)" <<< "companies"
+companies
+$ egrep "compan(y|ies)" <<< "companyies" # matches, because "company" matches also "companyies"
+companyies
+```
+
+In the same spirit, the grouping operator ```( ... )``` can be used with other metacharacters:
+
+```bash
+$ egrep "Big( Computer)?" <<< "Big" # matches, because "Big" matches "Big"
+Big
+$ egrep "Big( Computer)?" <<< "Big Computer" # matches, because both "Big" and "Big Computer" match "Big Computer"
+Big Computer
+$ egrep "Big( Computer)?" <<< "Big Comp" # matches, because "Big" matches "Big Computer"
+Big Comp
+```
 
 
 
-`()` — groups regular expressions
+TBC 20240709 ctd from here, refine examples above and ctd from ones below
 
-- Example: `Big( Computer)?` — matches both “Big” and “Big Computer” **TBI test**
-- Example: `compan(y|ies)` — matches both “company” and “companies”
+
+
 - Example: `(^| )` — matches beginning of the line, or space
 
 
