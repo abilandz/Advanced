@@ -726,7 +726,7 @@ Finally, we make a connection between different metacharacters &mdash; regex ```
 
 #### POSIX character classes ```[:keyword:]``` <a name="#POSIX.character.classes"></a>
 
-POSIX **character classes** are keywords bracketed by ```[:``` and ```:]``` , which must be enclosed in square brackets, ```[``` and ```]```. Therefore, the correct syntax for corresponding regex is ```[[:keyword:]]```, while ```[:keyword:]``` by itself is invalid regex. It is supprted both in BRE and ERE.
+POSIX **character classes** are keywords bracketed by ```[:``` and ```:]```, which must be further enclosed in an actual regex within square brackets, ```[``` and ```]```. Therefore, the correct syntax for corresponding regex is ```[[:keyword:]]```, while ```[:keyword:]``` by itself is invalid syntax for regex. POSIX character classes are supprted both in BRE and ERE.
 
 The POSIX standard defines the following 12 character classes:
 
@@ -740,13 +740,13 @@ The POSIX standard defines the following 12 character classes:
 * ```[:lower:]``` &mdash; lowercase alphabetic characters a, b, ..., z.  Same as regex ```[a-z]```
 * ```[:print:]``` &mdash; all printable characters and spaces (i.e. anything except control characters). Equaivalent to ```[[:graph:] ]```
 
-* ```[:punct:]``` &mdash; punctuation characters and symbols, except letters and digits. For instance: ```;,:.!?"\#$%&'()*+-/\\<=>@[]^_`{|}~```
-* ```[:space:]``` &mdash; whitespace characters, tab spacing ```\n```, new line ```\n```, carrige return ```\r```, formfeed ```\f```, and vertical tab ```\v```
+* ```[:punct:]``` &mdash; punctuation characters and all symbols except letters and digits. For instance: ```;,:.!?"\#$%&'()*+-/\<=>@[]^_`{|}~```
+* ```[:space:]``` &mdash; whitespace characters, tab spacing ```\t```, new line ```\n```, carrige return ```\r```, formfeed ```\f```, and vertical tab ```\v```
 * ```[:upper:]``` &mdash; uppercase alphabetic characters A, B, ..., Z. Same as regex ```[A-Z]```
 
 * ```[:xdigit:]``` &mdash; hexadecimal digits. Same as regex ```[0-9A-Fa-f]```
 
-The usage of POSIX character classes is straightforward, as the following examples illustrate:
+The usage of POSIX character classes and their combination with other metacharecters is straightforward, as the following examples illustrate:
 
 ```bash
 $ egrep 'a[[:digit:]]b' <<< "a1b" # matches
