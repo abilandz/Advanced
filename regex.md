@@ -103,7 +103,7 @@ The backslash metacharacter ```\``` has the same meaning in globbing, BRE, and E
 	```
 	​	 In this context, a frequent use case is ```\\```, which stands for the literal backslash character ```\```. 	
 
-2. the ordinary characters into composite metacharacter (```\n``` is the standard composite metacharacter for a new line, ```\t``` for tab spacing, etc.):
+2. the ordinary characters into composite metacharacter (```\n``` is the standard composite metacharacter for a new line, ```\t``` for tab spacing, ```\b``` for backspace, etc.):
 
    ```bash
    $ echo -e "a\nbb"
@@ -111,6 +111,8 @@ The backslash metacharacter ```\``` has the same meaning in globbing, BRE, and E
    bb
    $ echo -e "a\tbb"
    a       bb
+   $ echo -e "a\bb"
+   b
    ```
 
 The frequent and distinct use case of ```\``` as a wildcard in globbing is to force literal interpretation of an empty character, instead of defaulting empty character to be input field separator. This is needed when files or directories have literal empty characters as part of their names, as this example illustrates:
@@ -668,7 +670,7 @@ TBI 20240804 usage in combination with other metacharacters
 
 #### Grouping operator ```( ... )``` <a name="grouping"></a>
 
-Composite metacharacter ```( ... )```, named _grouping operator_, has a special meaning only in ERE. It's primary use case is to group regular expressions. For instance, regex ```compan(y|ies)``` will match both "company" and "companies", but also few other possibilities:
+Composite metacharacter ```( ... )```, named _grouping operator_, has a special meaning only in ERE. Its primary use case is to group regular expressions. For instance, regex ```compan(y|ies)``` will match both "company" and "companies", but also few other possibilities:
 
 ```bash
 $ egrep "compan(y|ies)" <<< "company"
@@ -686,52 +688,37 @@ $ egrep "Big( Computer)?" <<< "Big" # matches, because "Big" matches "Big"
 Big
 $ egrep "Big( Computer)?" <<< "Big Computer" # matches, because both "Big" and "Big Computer" match "Big Computer"
 Big Computer
-$ egrep "Big( Computer)?" <<< "Big Comp" # matches, because "Big" matches "Big Computer"
+$ egrep "Big( Computer)?" <<< "Big Comp" # matches, because "Big" matches "Big Comp"
 Big Comp
 ```
 
-
-
-TBC 20240709 ctd from here, refine examples above and ctd from ones below
-
-
-
-- Example: `(^| )` — matches beginning of the line, or space
-
-
-
-(abc|def)+ => match a string that contains one or more occurrences of substrings 'abc' and 'def'
-
-
-
-o the group is treated like a standard character
+The common use case of this combinaton of methacharacters is:
 
 ```bash
-$ echo "Sat" | egrep "Sat(urday)?"
+$ egrep "Sat(urday)?" <<< "Sat"
 Sat
-$ echo "Saturday" | egrep "Sat(urday)?"
+$ egrep "Sat(urday)?" <<< "Saturday" 
 Saturday
 ```
 
+As another example, we illustrate the usage of  ```( ... )``` in combination with ```|``` and ```+``` metacharachers, by considering the compound regex ```(abc|def)+```, which matches a string that contains one or more occurrences of substrings 'abc' and 'def': 
+
+```bash
+$ egrep "(abc|def)+" <<< "abc" # matches, because "abc" matches "abc"
+abc
+$ egrep "(abc|def)+" <<< "def" # matches, because "def" matches "def"
+def
+$ egrep "(abc|def)+" <<< "abcdef" # matches, because both "abc" and "def" match "abcdef"
+abcdef
+```
+
+The regex which matches beginning of the line or space is given elegantly by `(^| )` .
+
+Finally, we make a connection between different metacharacters &mdash; regex ```^(bat|Cat)``` is the same as ```^[bC]at```. 
 
 
-o for a compound expressions, use ( ) (can be nested, like braces in math!), and then { }
-
-$ grep -E '(\b(an|the)\ ){2,}' <<< "an an the the"
-
-an an the the
 
 
-
-yields a match if any of the patterns match
-
-grep -E '^(first|second|third)' someFile
-
-o this is the same thing:
-
-grep -E '^(bat|Cat)' someFile
-
-grep -E '^[bC]at' someFile
 
 
 
@@ -739,37 +726,59 @@ grep -E '^[bC]at' someFile
 
 #### POSIX character classes ```[:keyword:]``` <a name="#POSIX.character.classes"></a>
 
-POSIX **character classes** are keywords bracketed by ```[:``` and ```:]``` , which  must appear inside the square brackets, ```[``` and ```]```,  of a bracket expression. TBI this doesn't read well at all
+POSIX **character classes** are keywords bracketed by ```[:``` and ```:]``` , which must be enclosed in square brackets, ```[``` and ```]```. Therefore, the correct syntax for corresponding regex is ```[[:keyword:]]```, while ```[:keyword:]``` by itself is invalid regex. It is supprted both in BRE and ERE.
 
-o BRE supports the following (TBI check still for globbing and ERE):
+The POSIX standard defines the following 12 character classes:
 
-o The POSIX standard defined regular expression characters and operators, both for BRE and ERE
+- ```[:alnum:]``` &mdash; alphanumeric characters a, b, ..., z (both lower and upper cases), and numeric characters 0, 1, ...,  9. It is equivalent to the regex ```[a-zA-Z0-9]```
+- ```[:alpha:]``` &mdash; alphabetic characters a, b, ..., z (both lower and upper cases). It is equivalent to the regex ```[a-zA-Z]```
+- ```[:blank:]``` &mdash; space or tab spacing
+- ```[:cntrl:]``` &mdash; control characters
+- ```[:digit:]``` &mdash; numeric characters 0, 1, ..., 9. Same as regex ```[0-9]```
+- ```[:graph:]``` &mdash; printable and visible (non-space) characters (i.e. anything except spaces and control characters). Equaivalent to ```[^ [:cntrl:]]```
+
+* ```[:lower:]``` &mdash; lowercase alphabetic characters a, b, ..., z.  Same as regex ```[a-z]```
+* ```[:print:]``` &mdash; all printable characters and spaces (i.e. anything except control characters). Equaivalent to ```[[:graph:] ]```
+
+* ```[:punct:]``` &mdash; punctuation characters and symbols, except letters and digits. For instance: ```;,:.!?"\#$%&'()*+-/\\<=>@[]^_`{|}~```
+* ```[:space:]``` &mdash; whitespace characters, tab spacing ```\n```, new line ```\n```, carrige return ```\r```, formfeed ```\f```, and vertical tab ```\v```
+* ```[:upper:]``` &mdash; uppercase alphabetic characters A, B, ..., Z. Same as regex ```[A-Z]```
+
+* ```[:xdigit:]``` &mdash; hexadecimal digits. Same as regex ```[0-9A-Fa-f]```
+
+The usage of POSIX character classes is straightforward, as the following examples illustrate:
+
+```bash
+$ egrep 'a[[:digit:]]b' <<< "a1b" # matches
+a1b
+$ egrep 'a[[:digit:]]b' <<< "a9b" # matches
+a9b
+$ egrep 'a[[:digit:]]b' <<< "a19b" # doesn't match, because [:digit:] by itself matches only a single digit
+$ egrep 'a[[:digit:]][[:digit:]]b' <<< "a19b" # matches
+a19b
+$ egrep 'a[[:digit:]]+b' <<< "a19b" # matches
+a19b
+$ egrep 'a[[:digit:]]+b' <<< "a123456b" # matches
+a123456b
+$ egrep 'a[[:digit:]]{2}b' <<< "a123b" # doesn't match, {2} requires exactly 2 digits between a and b
+$ egrep 'a[[:digit:]]{3}b' <<< "a123b" # matches
+a123b
+```
+
+Finally, we remark that this is a typical syntax errror:
+
+```bash
+$ egrep 'a[:digit:]b' <<< "a1b" # WRONG!!
+grep: character class syntax is [[:space:]], not [:space:]
+```
 
 
 
-[[:alpha:]] -- alphabetic characters a, b, ..., z (both lowercase and uppercase)
 
-[[:lower:]] -- lowercase alphabetic characters a, b, ..., z
 
-[[:upper:]] -- uppercase alphabetic characters A, B, ..., Z
+TBC 20240927
 
-[[:alnum:]] -- alphanumeric characters a, b, ..., z (both lower- and upper-cases), 0, 1, ...,  9 TBI check this one further, because in Table 3-3 the claim "printable characters", but I do not see that working
 
-[[:blank:]] -- space or tab
-
-[[:space:]] -- Whitespace characters tab, \n, formfeed, vertical tab, carrige return (TBI check this one in practice)
-
-[[:digit:]] -- numeric characters 0, 1, ..., 9. Same as ```[0-9]``` TBI check if it's really the same, are there any corner cases? 
-
-[[:punct:]] -- punctuation characters ; , : . ! ? etc. TBI check this one and provide the full list
-
-[[:print:]] -- all printable characters
-
-[[:graph:]] -- printable and visible (non-space) characters (TBI check this one)
-
-[[:cntrl:]] -- control characters (TBI check this one, drop perhaps?)
-
-[[:xdigit:]] -- hexadecimal digits (TBI check this one, drop perhaps?)
 
 
 
