@@ -3,7 +3,7 @@
 
 # Regular expressions
 
-**Last update**: 20240809
+**Last update**: 20240927
 
 
 ### Table of Contents
@@ -202,13 +202,13 @@ A       BB
 
 __Example 6__: In this example we demonstrate that the asterisk ```*``` by itself matches nothing:
 ```bash
-$ grep *exam <<< exam # doesn't match, because there is no preceding character
-$ grep Y*exam <<< exam # matches, because there are zero or more occurrences of "Y" in "exam"
+$ grep '*exam' <<< exam # doesn't match, because there is no preceding character
+$ grep 'Y*exam' <<< exam # matches, because there are zero or more occurrences of "Y" in "exam"
 exam
-$ grep "^*exam" <<< exam # doesn't match, this combination "^*" is the corner case, see above 
+$ grep '^*exam' <<< exam # doesn't match, this combination "^*" is the corner case, see above 
 ```
 
-__Example 7__: Asterisk ```*``` an be used to elegantly diminish a difference between US and UK English in spelling:
+__Example 7__: Asterisk ```*``` can be used to elegantly diminish a difference between US and UK English in spelling:
 
 ```bash
 $ cat someFile
@@ -278,16 +278,16 @@ sed '/^$/d' file
 grep -v '^$' file
 ```
 
-__Example 2__: Filter out all blank lines from file (i.e. lines which contain only a hidden new line metacharacter ```\n```), where each line can in addition contain also some empty spaces. 
+__Example 2__: Filter out all blank lines from file (i.e. lines which contain a hidden new line metacharacter ```\n```), where each line can in addition contain also some empty spaces. 
 ```bash
 awk '!/^ *$/' file
 sed '/^ *$/d' file
 grep -v '^ *$' file
 ```
 
-Summary of further standard use cases of anchors:
+A few additional standard use cases of anchors:
 
-* ```    *$``` &mdash; matches lines with one or more empty characters at the end (there have to be two or more spaces before ```*``` )
+* ```   *$``` &mdash; matches lines with one or more empty characters at the end (there have to be two or more spaces before ```*``` )
 * ```^  *``` &mdash; matches a line with one or more leading spaces (there have to be two or more spaces before ```*``` )
 * ```^.*$``` &mdash; matches the entire line
 
@@ -299,7 +299,7 @@ Summary of further standard use cases of anchors:
 
 #### Character classes ```[ ... ]``` <a name="character.classes"></a>
 
-Character classes ```[ ... ]``` (or sometimes being referred to as _bracket expression_) work the same way in globbing, BRE and ERE, and they provide a more specific variant of dot ```.``` metacharacter. Basically, ```.``` metacharacter would match any single character, while ```[ ... ]``` matches any single character enlisted between ```[``` and ``` ]```.
+Character classes ```[ ... ]``` (or sometimes being referred to as _bracket expression_) work the same way in globbing, BRE and ERE, and they provide a more specific variant of dot ```.``` metacharacter. Basically, ```.``` metacharacter would match any single character, while ```[ ... ]``` matches only any single character enlisted between ```[``` and ``` ]```, as the following example illustrates:
 
 ```bash
 $ echo abc | grep "a[bx]c"
@@ -325,7 +325,7 @@ maintanence
 maintenence
 ```
 
-Another common use case is to ignore in the search if the word is at the begininng of the sentence, and therefore capitalized, or not.
+Another common use case is to ignore in the search if the word is at the begininng of the sentence, and therefore capitalized, or not:
 ```bash
 $ echo someWord | grep "[sS]omeWord"
 someWord
@@ -360,7 +360,7 @@ file_B.txt file_C.txt file_D.txt
 __Example__: Write the regex which matches any of the 4 arithmetic operators: "+", "-", "*", and "\\". 
 
 - ```[-+*\]``` and ```[+*\-]``` are both correct. Within ```[ ... ]```, the symbol ```-``` at the very beginning or at the very end is not a metacharacter;
-- ```[+-*\]``` is wrong, because here the symbol ```-``` is in the middle, and is interpreted as a metacharacter which indicates range between symbols "+" and "*", which is ill-defined
+- ```[+-*\]``` is wrong, because here the symbol ```-``` is in the middle, and is interpreted as a metacharacter which indicates range between symbols "+" and "*", which is ill-defined.
 
 Multiple ranges are also fine, e.g.
 
@@ -396,7 +396,7 @@ Character classes ```[ ... ]``` can be naturally combined with other metacharact
 
 In the above example, asterisk ```*``` had an effect only on a single preceding character "c". But we can make asterisk ```*``` acting directly on character classes ```[ ... ]``` , when the final result is different. In combination with character classes, ```*``` matches any number of characters in that class, but also in any order:
 
-- `[no]*` — matches "n", "nn", "nnn", "o", "oo", "ooo", "no", "nno", "noo", "on", "oon", "onn", etc. It will match also "abc" because that would correspond to "zero occurences either of "n" or "o". TBI 20240728 this is not really a usefuly regex  - re-think if I need this example at all
+- `[no]*` — matches "n", "nn", "nnn", "o", "oo", "ooo", "no", "nno", "noo", "on", "oon", "onn", etc. However, it will also match "abc" because that would correspond to "zero occurrences either of "n" or "o". Therefore, this is not really a very useful regex, but it's used here just to illustrated how this mechanism works.
 
 
 
@@ -486,7 +486,7 @@ exam
 
 The metacharacter ```+``` has a special meaning only in ERE, while in BRE and globbing it is only a literal character. In ERE, its meaning can be summarized as follows: the preceding character or regex can appear one or more times but must be present at least once. Therefore, ```+``` makes the occurrence of preceeding character or regex mandatory, but it doesn't restrict how many times it appears. By itself, the plus ```+``` matches nothing, it only has an effect on what appears before it. 
 
-Similarly like for the ```?``` metacharacter described previously, one can easily deduce the simple technique how to interpret this metacharacter in ERE in practice: since ```+``` matches at least one occurrence, one expands regex containing ```+``` into one or more occurrences of preceeding character or regex it has to match. For instance, regex ```ab+c``` expands into strings "abc", "abbc", "abbbc", ...,  and this set of string is the set this regex has to match. This is illustrated with a few examples:
+Similarly like for the ```?``` metacharacter described previously, one can easily deduce the simple technique how to interpret this metacharacter in ERE in practice: since ```+``` matches at least one occurrence, one expands regex containing ```+``` into one or more occurrences of preceeding character or regex it has to match. For instance, regex ```ab+c``` expands into strings "abc", "abbc", "abbbc", ...,  and this set of strings is the set this regex has to match. This is illustrated with a few examples:
 
 ```bash
 $ egrep "ab+c" <<< "ac" # doesn't match, because "abc", "abbc", ..., doesn't match "ac"
@@ -520,12 +520,12 @@ $ egrep "a[xy]+b" <<< "axxyb" # matches, because "axxyb" matches "axxyb"
 axxyb
 $ egrep "a[xy]+b" <<< "axyxyb" # matches, because "axyxyb" matches "axyxyb"
 axyxyb
-$ egrep "a[xy]+" <<< "axxb" # matches, because both "ax" and "axx" matches "axxb"
+$ egrep "a[xy]+" <<< "axxb" # matches, because both "ax" and "axx" match "axxb"
 axxb
 $ egrep "a[xy]+" <<< "ax" # matches, because "ax" matches "ax"
 ax
-$ egrep "a[xy]+" <<< "a" # doesn't match, because none of "ax", "ay", "axx", "ayy", ..., matches "a"
-$ egrep "a[xy]+" <<< "x" # doesn't match, because none of "ax", "ay", "axx", "ayy", ..., matches "x"
+$ egrep "a[xy]+" <<< "a" # doesn't match, because none of "ax", "ay", "axx", "ayy", ..., match "a"
+$ egrep "a[xy]+" <<< "x" # doesn't match, because none of "ax", "ay", "axx", "ayy", ..., match "x"
 ```
 
 
@@ -590,8 +590,8 @@ $ egrep "^[0-9]{3}" <<< "2458" # matches, because "245" matches the begining of 
 2458
 $ egrep "[0-9]{3}$" <<< "2458" # matches, because "458" matches the end of "2458"
 2458
-$ egrep "^[0-9]{3}$" <<< "2458" # doesn't match, same 3-character string has to match "2458" from beginning end, which is impossible TBI 20240804 refine explanation
-$ egrep "^[0-9]{3}$" <<< "2222" # doesn't match, same 3-character string has to match "2458" from beginning end, which is impossible TBI 20240804 refine explanation
+$ egrep "^[0-9]{3}$" <<< "2458" # doesn't match, same 3-character string has to match "2458" from beginning and end, which is impossible
+$ egrep "^[0-9]{3}$" <<< "2222" # doesn't match, this is a tricky case. "222" has to match simultaneously three "2" read from beginning, and read from the end, which is impossible.
 ```
 
 It is very instructive to establish the relation between ```{ ... }``` when used as a repetition operator in ERE, and some previously covered metacharacters. In particular, the following relations hold in ERE:
@@ -612,7 +612,7 @@ abc
 
 
 
-Curly braces can be used in another context, to generate with shell arbitrary strings via the _brace expansion_ mechanism. If the generated strings match the existing filenames, curly braces act as a _shell wildcard_ in this context. This particular use case of curly braces was covered in detailed in [Section 5 of PH8124](https://abilandz.github.io/PH8124/Lecture_5/Lecture_5.html#code_blocks_and_brace_expansion) course, and won't be repeated here.
+Curly braces can be used in another context, to generate with shell arbitrary strings via the _brace expansion_ mechanism. If the generated strings match the existing filenames, curly braces act as a _shell wildcard_ in this context. This particular use case of curly braces was covered in detailed in [Section 5 of PH8124](https://abilandz.github.io/PH8124/Lecture_5/Lecture_5.html#code_blocks_and_brace_expansion) course, and won't be repeated here. TBI 20240927 Or shall I repeat it nevertheless?
 
 
 
