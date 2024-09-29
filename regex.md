@@ -3,7 +3,7 @@
 
 # Regular expressions
 
-**Last update**: 20240927
+**Last update**: 20240929
 
 
 ### Table of Contents
@@ -28,6 +28,7 @@
 	* [Grouping operator](#grouping) ```( ... )```
 	* [POSIX character classes](#POSIX.character.classes) ```[:keyword:]```
 	* [Non-standard](#nonstandard) ```\<``` and ```\>``` 
+	* [Corner cases and exceptions](#corner.cases.and.exceptions)
 	
 3. [Real-life examples](#real.life.examples)
 
@@ -408,7 +409,7 @@ In the above example, asterisk ```*``` had an effect only on a single preceding 
 
 The metacharacter question mark ```?``` is not supported in BRE. When used in ERE or when used as a wildcard in globbing it has a different meaning: 
 
-1. In ERE, the question mark ```?``` matches zero or one occurrences of the preceeding character or of the preceeding regex. Therefore, ```?``` makes the preceeding character or regex optional. By itself, the question mark ```?``` matches nothing, it only has an effect on what appears before it. There exists a corner case when ```?``` behaves differently &mdash; as the first character of an entire ERE or after an initial `^` in ERE, the question mark ```?``` produces undefined results;
+1. In ERE, the question mark ```?``` matches zero or one occurrences of the preceeding character or of the preceeding regex. Therefore, ```?``` makes the preceeding character or regex optional. By itself, the question mark ```?``` matches nothing, it only has an effect on what appears before it;
 2. As a shell wildcard, the question mark ```?``` stands for "any single character". Therefore, metacharacter ```?``` in globbing acts the same way as metacharacter ```.``` in BRE and ERE.
 
 We first illustrate the usage of question mark ```?``` in ERE:
@@ -427,9 +428,9 @@ $ egrep "ab?c" <<< "acc" # matches, because "ac" (zero occurences of "b") matche
 acc
 ```
 
-From the above example, one can easily deduce the simple technique how to interpret this metacharacter in ERE in practice: since ```?``` matches zero or one occurrences, it is feasible to expand regex containing ```?``` into one or two literal strings it has to match. For instance, regex ```ab?c``` expands into two literal strings, namely "ac" or "abc", that this regex has to match.
+From the above examples, one can easily deduce the simple technique how to interpret this metacharacter in ERE in practice: since ```?``` matches zero or one occurrences, it is feasible to expand regex containing ```?``` into one or two literal strings it has to match. For instance, regex ```ab?c``` expands into two literal strings, namely "ac" or "abc", that this regex has to match.
 
-In BRE, the question mark ```?``` is not a metacharacter:
+In BRE, the question mark ```?``` is not a metacharacter, as the following example demonstrates:
 
 ```bash
 $ grep "ab?c" <<< "ac" # doesn't match, in BRE "?" is a literal character
@@ -470,17 +471,6 @@ $ egrep "a[xy]?" <<< "x" # doesn't match, because none of "a", "ax", "ay" match 
 ```
 
 In the same spirit, regex `80[234]?86` would match 80286, 80386, 80486, but also 8086. 
-
-Finally, there is a corner case, i.e. when ```?``` appears as the first character of an entire ERE or after an initial `^` in ERE, which leads, according to the POSIX standard for ERE, to undefined results: TBI 20240802 check again POSIX statements, there seems to be additional undefined cases
-
-```bash
-$ egrep "?exam" <<< exam # undefined behaviour, here it matches, but this is not guaranteed to work
-exam
-$ egrep "^?exam" <<< exam # undefined behaviour, here it matches, but this is not guaranteed to work 
-exam
-```
-
-
 
 
 
@@ -529,23 +519,6 @@ ax
 $ egrep "a[xy]+" <<< "a" # doesn't match, because none of "ax", "ay", "axx", "ayy", ..., match "a"
 $ egrep "a[xy]+" <<< "x" # doesn't match, because none of "ax", "ay", "axx", "ayy", ..., match "x"
 ```
-
-
-
-TBI 20240802 check again the corner cases, i.e. this paragraph from POSIX, and unify it with other metacharacters mentioned here:
-
-```
-*+?{
-```
-
-The <asterisk>, <plus-sign>, <question-mark>, and <left-brace> shall be special except when used in a bracket expression (see [RE Bracket Expression](https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html#tag_09_03_05)). Any of the following uses produce undefined results:
-
-- If these characters appear first in an ERE, or immediately following an unescaped <vertical-line>, <circumflex>, <dollar-sign>, or <left-parenthesis>
-- If a <left-brace> is not part of a valid interval expression (see [EREs Matching Multiple Characters](https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html#tag_09_04_06))
-
-
-
-TBI 20240802 clarify with example why ```+``` has no meaning by itself
 
 
 
@@ -612,13 +585,9 @@ $ egrep "a{0,1}" <<< "abc"
 abc
 ```
 
+Curly braces can be used in another context, to generate with shell arbitrary strings via the _brace expansion_ mechanism. If the generated strings match the existing filenames, curly braces act as a _shell wildcard_ in this context. This particular use case of curly braces was covered in detailed in [Section 5 of PH8124](https://abilandz.github.io/PH8124/Lecture_5/Lecture_5.html#code_blocks_and_brace_expansion) course, and won't be repeated here. _TBI 20240927 Or shall I repeat it nevertheless?_
 
 
-Curly braces can be used in another context, to generate with shell arbitrary strings via the _brace expansion_ mechanism. If the generated strings match the existing filenames, curly braces act as a _shell wildcard_ in this context. This particular use case of curly braces was covered in detailed in [Section 5 of PH8124](https://abilandz.github.io/PH8124/Lecture_5/Lecture_5.html#code_blocks_and_brace_expansion) course, and won't be repeated here. TBI 20240927 Or shall I repeat it nevertheless?
-
-
-
-TBI 20240802 clarify with example why curly brace has no meaning by itself
 
 
 
@@ -659,10 +628,6 @@ The alternation operator ```|``` is not to be confused with the pipe symbol ```|
 $ echo "cat sleeps" | egrep "cat|dog"
 cat sleeps
 ```
-
-
-
-TBI 20240804 usage in combination with other metacharacters
 
 
 
@@ -786,7 +751,6 @@ TBC 20240927
 We have already seen that a value can be stored in a variable by explicit assignment (using the operator 
 
 GNU versions of sed, awk and grep support also \```\\<``` and ``` \\>``` for matching the string and the beginning and end of the word. Use with care, limited portability (AB)
-
 
 
 
@@ -938,13 +902,26 @@ Gooogle
 
 
 
+### 4. Corner cases and exceptions <a name="corner.cases.and.exceptions"></a>
+
+There exists a few corner cases when metacharacters ```*```, ```+``` and ```?``` lose their special meaning in ERE &mdash; as the first character of an entire ERE or after an initial ```|```, ```^```, ```$``` or ```(```  in ERE, these  metacharacters ```*```, ```+``` and ```?``` produce undefined results.
+
+For instance:
+
+```bash
+$ egrep "?exam" <<< exam # undefined behaviour, here it matches, but this is not guaranteed to work
+exam
+$ egrep "^?exam" <<< exam # undefined behaviour, here it matches, but this is not guaranteed to work 
+exam
+```
+
+Further details on exceptions can be found in the POSIX standard for regular expressions. 
 
 
 
 
 
-
-### 4. Further reading <a name="further.reading"></a>
+### 5. Further reading <a name="further.reading"></a>
 
 * _"Linux Command Line and Shell Scripting Bible"_, Richard Blum, Christine Bresnahan 
    * Chapter 20: Regular Expressions
