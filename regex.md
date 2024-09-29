@@ -691,7 +691,7 @@ Finally, we make a connection between different metacharacters &mdash; regex ```
 
 #### POSIX character classes ```[:keyword:]``` <a name="#POSIX.character.classes"></a>
 
-POSIX **character classes** are keywords bracketed by ```[:``` and ```:]```, which must be further enclosed in an actual regex within square brackets, ```[``` and ```]```. Therefore, the correct syntax for corresponding regex is ```[[:keyword:]]```, while ```[:keyword:]``` by itself is invalid syntax for regex. POSIX character classes are supprted both in BRE and ERE.
+POSIX **character classes** are keywords bracketed by ```[:``` and ```:]```, which must be further enclosed in an actual regex within square brackets, ```[``` and ```]```. Therefore, the correct syntax for corresponding regex is ```[[:keyword:]]```, while ```[:keyword:]``` by itself is invalid syntax for regex. POSIX character classes are supported both in BRE and ERE.
 
 The POSIX standard defines the following 12 character classes:
 
@@ -741,29 +741,81 @@ grep: character class syntax is [[:space:]], not [:space:]
 
 
 
-TBC 20240927
-
-
-
-
-
 #### Non-standard ```\<``` and ```\>``` <a name="#nonstandard"></a>
-We have already seen that a value can be stored in a variable by explicit assignment (using the operator 
+GNU versions of **sed**, **awk** and **grep** support also ```\<``` and ``` \>``` for matching the string and the beginning and end of the word. Due to limited portability, the usage of these metacharacters is not recommended.
 
-GNU versions of sed, awk and grep support also \```\\<``` and ``` \\>``` for matching the string and the beginning and end of the word. Use with care, limited portability (AB)
+
+
+
 
 
 
 
 
 ### 3. Real-life examples <a name="real.life.examples"></a>
+In this section we illustrate with a few real-life examples both how regular expressions can and cannot be used in practice. 
+
+
+
+**Common idioms**
+
+* ```(.*)``` &mdash; match any sequence of characters enclosed in parentheses
+* ```[:alnum:]``` or ```[a-zA-Z0-9]``` &mdash; match any alpha-numeric character 
+* ```X?``` &mdash; match zero or one capital letter "X"
+* ```X*``` &mdash; match zero or more capital letters "X"
+* ```X+``` &mdash; match one or more capital letter "X"
+* ```X{n}``` &mdash; match exactly n constitutive capital letters "X"
+* ```X{n,}``` &mdash; match at least n consectutive capital letters "X"
+* ```X{n,m}``` &mdash; match at least n and not more than m constitutive capital letters "X"
+
+
+
+__Example:__ Write a code snippet which matches strings against globs.
+
+```bash 
+case $file in
+    *.txt) process-as-text "$file ;;
+    *.png) ... ;;
+esac
+
+or
+
+if [[ $file = *.txt ]]; then
+    process-as-text "$file"
+elif [[ $file = *.png ]]; then
+    ...
+fi
+```
+
+
+
+**Example:** Write a regex which will match timestamps written in one of the following 3 formats:
+
+```bash
+DD-MM-YYYY
+DD/MM/YYYY
+DD.MM.YYYY
+```
+
+The solution is: TBI 20240929
+
+
+
+**Example:** Write a regex that matches ORCID format — see Wikipedia entry for definition: https://en.wikipedia.org/wiki/ORCID
+
+The solution is: TBI 20240929
+
+
+
+**Frequent failures**
+
 Frequent point of failure when writing a shell script is to forget that **Bash** will always by default attempt to perform wildcard expansion, i.e. it will attempt to match any glob against files in the current directory, and replace it by a list of filenames. For instance, consider the line:
 
 ```bash
 echo Is this my file? # WRONG!!
 ```
 
-The last argument is a glob, and **Bash** will match it against all files in the current directory which starts with "file" and have exactly one more character. If it happens that in the current directory there are files with names _file0_ and _file1_, what echo receives eventully as arguments is:
+The last argument is a glob, and **Bash** will match it against all files in the current directory which starts with "file" and have exactly one more character. If it happens that in the current directory there are files with names _file0_ and _file1_, what **echo** receives eventully as arguments is:
 
 ```bash
 echo Is this my file0 file1
@@ -789,114 +841,11 @@ unset "myArray[1]"
 
 Within quotes, ```[]``` is not treated as a glob.
 
-**Common idioms:**
-
-* ```(.*)``` &mdash; match any sequence of characters enclosed in parentheses
-* ``` [:alnum:]``` or ```[A-z0-9]``` &mdash; match any alpha-numeric character  =>  TBI 20240721 test
-* ``` [^[:alnum:]]``` or ```[^A-z0-9]``` &mdash; match anything, except alpha-numeric character  =>  TBI 20240721 test
-* ```X?``` &mdash; match no or one capital letter X
-* ```X*``` &mdash; match zero or more capital letters X
-* ```X+``` &mdash; match one or more capital letter X
-* ```X{n}``` &mdash; match exactly n constitutive capital X's (use with grep -E)
-* ```X{n,}``` &mdash; match at least n constitutive capital X's
-* ```X{n,m}``` &mdash; match at least n and not more than m constitutive capital X's
-
-
-
-Example:  [[:alpha:]!] — matches alphabetic characters and !
-
-
-
-grep -E -v '^$' someFile # filter out empty lines
-
-
-
-__Example__: Write a code snippet which matches strings against globs.
-
-```bash 
-case $file in
-    *.txt) process-as-text "$file ;;
-    *.png) ... ;;
-esac
-
-or
-
-if [[ $file = *.txt ]]; then
-    process-as-text "$file"
-elif [[ $file = *.png ]]; then
-    ...
-fi
-```
 
 
 
 
 
-**Use here as examples, or set as possible homeworks**
-
-1. Write a regex which will match timestamps written in one of the following 3 formats:
-
-   ```bash
-   DD-MM-YYYY
-   DD/MM/YYYY
-   DD.MM.YYYY
-   ```
-
-2. Write a regex that matches ORCID format — see Wikipedia entry for definition: https://en.wikipedia.org/wiki/ORCID
-
-
-
-
-
-
-
-TBC 20240803 what do I do with these examples?
-
-```bash
-grep -E '^G[o]?gle' <<< "Ggle"
-
-Ggle
-
-grep -E '^G[o]?gle' <<< "Gogle"
-
-Gogle
-
-grep -E '^G[o]?gle' <<< "Google"
-
-nothing
-
-grep -E '^G[o]*gle' <<< "Ggle"
-
-Ggle
-
-grep -E '^G[o]*gle' <<< "Gogle"
-
-Gogle
-
-grep -E '^G[o]*gle' <<< "Google"
-
-Google
-
-grep -E '^G[o]*gle' <<< "Gooogle"
-
-Gooogle
-
-grep -E '^G[o]+gle' <<< "Ggle"
-
-nothing
-
-grep -E '^G[o]+gle' <<< "Gogle"
-
-Gogle
-
-grep -E '^G[o]+gle' <<< "Google"
-
-Google
-
-grep -E '^G[o]+gle' <<< "Gooogle"
-
-Gooogle
-```
 
 
 
@@ -916,6 +865,10 @@ exam
 ```
 
 Further details on exceptions can be found in the POSIX standard for regular expressions. 
+
+
+
+
 
 
 
